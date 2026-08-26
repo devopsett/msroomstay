@@ -28,7 +28,6 @@
       .ms-logo-text { -webkit-text-stroke: 1.5px #004ca8; }
     }
 
-    /* Modal Overlay Kebal (High Z-Index & Reliable Display) */
     .app-modal {
       position: fixed !important;
       inset: 0 !important;
@@ -348,15 +347,13 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-wifi"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
-                  <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
-                </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fa-solid fa-wifi"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
+                <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -812,7 +809,7 @@
       copyToClipboard(GOOGLE_FORM_URL, "Pautan Google Form");
     }
 
-    // Modal Controller Tanpa Gangguan CSS
+    // Modal Handlers (Pantas & Kalis Ralat)
     function showModalDirect(id) {
       const el = document.getElementById(id);
       if (el) {
