@@ -80,7 +80,7 @@
           </div>
         </div>
         
-        <!-- Desktop Nav -->
+        <!-- Desktop Navigation Buttons -->
         <div class="hidden sm:flex items-center space-x-1.5">
           <button type="button" onclick="switchView('tenant')" id="btn-tenant-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition">
             <i class="fa-solid fa-user-circle mr-1.5"></i> Portal Penyewa
@@ -347,13 +347,15 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
-                <i class="fa-solid fa-wifi"></i>
-              </div>
-              <div>
-                <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
-                <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
+                  <i class="fa-solid fa-wifi"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
+                  <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
+                </div>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -375,13 +377,15 @@
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                <i class="fa-solid fa-key"></i>
-              </div>
-              <div>
-                <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
+                  <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
+                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
+                </div>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -809,7 +813,6 @@
       copyToClipboard(GOOGLE_FORM_URL, "Pautan Google Form");
     }
 
-    // Modal Handlers (Pantas & Kalis Ralat)
     function showModalDirect(id) {
       const el = document.getElementById(id);
       if (el) {
@@ -1171,60 +1174,60 @@
     }
 
     function handleTenantPaymentSubmit(e) {
-  e.preventDefault();
-  if (!currentTenantProfile) return;
+      e.preventDefault();
+      if (!currentTenantProfile) return;
 
-  const fileInput = document.getElementById('pay-tenant-file');
-  const file = fileInput ? fileInput.files[0] : null;
-  const bulan = document.getElementById('pay-tenant-month').value;
-  const btn = document.getElementById('btn-submit-tenant-pay');
+      const fileInput = document.getElementById('pay-tenant-file');
+      const file = fileInput ? fileInput.files[0] : null;
+      const bulan = document.getElementById('pay-tenant-month').value;
+      const btn = document.getElementById('btn-submit-tenant-pay');
 
-  if (!file) {
-    showToast('Sila muat naik resit/bukti bayaran!', 'warning');
-    return;
-  }
-
-  btn.innerText = 'Memproses...';
-  btn.disabled = true;
-
-  const reader = new FileReader();
-  reader.onload = async function(evt) {
-    const base64Data = evt.target.result.split(',')[1];
-    const payload = {
-      idPenyewa: currentTenantProfile.id,
-      ic: currentTenantProfile.ic,
-      bulan: bulan,
-      fileData: {
-        base64: base64Data,
-        mimeType: file.type,
-        filename: file.name
+      if (!file) {
+        showToast('Sila muat naik resit/bukti bayaran!', 'warning');
+        return;
       }
-    };
 
-    try {
-      const res = await apiPost({ action: "submitTenantPayment", payload: payload });
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
-      btn.disabled = false;
-      if (res.success) {
-        closeModalDirect('modal-pay-tenant');
-        sessionStorage.removeItem("cached_rooms"); // Padam cache serta-merta
-        showToast(res.message || 'Bukti bayaran berjaya dihantar!', 'success');
-        
-        if (res.whatsappUrl) window.open(res.whatsappUrl, '_blank');
+      btn.innerText = 'Memproses...';
+      btn.disabled = true;
 
-        const freshRes = await apiGet({ action: "verifyTenantAccess", roomId: currentTenantProfile.bilikId, ic: currentTenantProfile.ic });
-        if (freshRes.success) renderTenantDetails(freshRes.data);
-      } else {
-        showToast(res.message || 'Gagal menghantar bayaran.', 'error');
-      }
-    } catch (err) {
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
-      btn.disabled = false;
-      showToast('Ralat API: ' + err.message, 'error');
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        const base64Data = evt.target.result.split(',')[1];
+        const payload = {
+          idPenyewa: currentTenantProfile.id,
+          ic: currentTenantProfile.ic,
+          bulan: bulan,
+          fileData: {
+            base64: base64Data,
+            mimeType: file.type,
+            filename: file.name
+          }
+        };
+
+        try {
+          const res = await apiPost({ action: "submitTenantPayment", payload: payload });
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
+          btn.disabled = false;
+          if (res.success) {
+            closeModalDirect('modal-pay-tenant');
+            sessionStorage.removeItem("cached_rooms");
+            showToast(res.message || 'Bukti bayaran berjaya dihantar!', 'success');
+            
+            if (res.whatsappUrl) window.open(res.whatsappUrl, '_blank');
+
+            const freshRes = await apiGet({ action: "verifyTenantAccess", roomId: currentTenantProfile.bilikId, ic: currentTenantProfile.ic });
+            if (freshRes.success) renderTenantDetails(freshRes.data);
+          } else {
+            showToast(res.message || 'Gagal menghantar bayaran.', 'error');
+          }
+        } catch (err) {
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
+          btn.disabled = false;
+          showToast('Ralat API: ' + err.message, 'error');
+        }
+      };
+      reader.readAsDataURL(file);
     }
-  };
-  reader.readAsDataURL(file);
-}
 
     function viewReceipt(idx) {
       const p = currentTenantPayments[idx];
@@ -1250,7 +1253,6 @@
       showModalDirect('modal-receipt');
     }
 
-    // Modal Password Pemilik
     function requestOwnerAccess() {
       if (authenticatedPassword) {
         switchView('owner');
