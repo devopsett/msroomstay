@@ -1,1662 +1,665 @@
-<!DOCTYPE html>
-<html lang="ms">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>MSRoomstay - Sistem Pengurusan Bilik Sewa</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    .ms-logo-text {
-      color: #ffffff;
-      -webkit-text-stroke: 1.2px #004ca8;
-      paint-order: stroke fill;
+/**
+ * =========================================================================
+ * MSRoomstay - Ultra Fast API Backend (Cache & Optimized Memory)
+ * =========================================================================
+ */
+
+const OWNER_PASSWORD = "121314";
+const OWNER_WHATSAPP_NUMBER = "60182189002"; 
+const GOOGLE_FORM_URL = "https://forms.gle/2XcGo37g7pqPNkan9";
+
+function doGet(e) {
+  const action = e ? e.parameter.action : "";
+  let result = { success: false, message: "Action tidak sah" };
+
+  try {
+    if (action === "getPublicRooms") {
+      result = { success: true, data: getPublicRoomsFast() };
+    } else if (action === "verifyTenantAccess") {
+      result = verifyTenantAccessFast(e.parameter.roomId, e.parameter.ic);
+    } else if (action === "verifyOwnerPassword") {
+      result = { success: (safeStr(e.parameter.password) === OWNER_PASSWORD) };
+    } else if (action === "getOwnerDashboardData") {
+      result = { success: true, data: getOwnerDashboardDataFast(e.parameter.month, e.parameter.password) };
     }
-    html, body {
-      font-size: 14px;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      width: 100%;
-      min-height: 100%;
+  } catch (err) {
+    result = { success: false, message: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let result = { success: false, message: "Request tidak sah" };
+
+  try {
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action;
+
+    if (action === "submitTenantPayment") {
+      result = submitTenantPaymentFast(postData.payload);
+    } else if (action === "updateStatusBayaranWithReceipt") {
+      result = updateStatusBayaranWithReceiptFast(postData.payload, postData.password);
+    } else if (action === "simpanDataBilik") {
+      result = simpanDataBilikFast(postData.payload, postData.password);
+    } else if (action === "padamPenyewa") {
+      result = padamPenyewaFast(postData.idBilik, postData.password);
     }
-    input, select, textarea { font-size: 16px !important; }
-    @media (min-width: 640px) {
-      body { font-size: 15px; }
-      input, select, textarea { font-size: 14px !important; }
-      .ms-logo-text { -webkit-text-stroke: 1.5px #004ca8; }
-    }
-
-    .app-modal {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 999999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      overflow-y: auto;
-    }
-
-    @keyframes slideIn { from { transform: translateY(-16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
-    .toast-enter { animation: slideIn 0.25s ease-out forwards; }
-    .toast-exit { animation: slideOut 0.25s ease-in forwards; }
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
-    @media print {
-      @page { size: A4 portrait; margin: 10mm 12mm; }
-      html, body { width: 210mm; height: 297mm; background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
-      body * { visibility: hidden; }
-      #modal-receipt { position: fixed !important; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; background: transparent !important; padding: 0 !important; display: flex !important; z-index: 9999999 !important; }
-      #printable-receipt, #printable-receipt * { visibility: visible; }
-      #printable-receipt { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
-      .no-print { display: none !important; }
-    }
-  </style>
-</head>
-<body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-12 selection:bg-blue-600 selection:text-white">
-
-  <!-- Toast Container -->
-  <div id="toast-container" class="fixed top-3 left-3 right-3 sm:left-auto sm:right-4 z-[9999999] flex flex-col space-y-2 pointer-events-none max-w-sm ml-auto"></div>
-
-  <!-- Top Navigation -->
-  <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 no-print shadow-xs">
-    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-14 sm:h-16">
-        <div class="flex items-center space-x-2.5 cursor-pointer py-2" onclick="switchView('tenant')">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#2fa4ff] flex items-center justify-center p-1.5 shadow-sm">
-            <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-              <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-              <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="flex items-baseline font-black tracking-tight text-lg sm:text-xl select-none">
-            <span class="ms-logo-text">MS</span><span class="text-[#004ca8]">Roomstay</span>
-          </div>
-        </div>
-        
-        <!-- Desktop Nav -->
-        <div class="hidden sm:flex items-center space-x-1.5">
-          <button type="button" onclick="switchView('tenant')" id="btn-tenant-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition">
-            <i class="fa-solid fa-user-circle mr-1.5"></i> Portal Penyewa
-          </button>
-          <button type="button" onclick="switchView('wifi')" id="btn-wifi-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-wifi mr-1.5 text-slate-400"></i> WiFi & Safebox
-          </button>
-          <button type="button" onclick="switchView('guide')" id="btn-guide-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-book-open mr-1.5 text-slate-400"></i> Panduan
-          </button>
-          <button type="button" onclick="switchView('terms')" id="btn-terms-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-file-contract mr-1.5 text-slate-400"></i> Terma & Syarat
-          </button>
-          <button type="button" onclick="requestOwnerAccess()" id="btn-owner-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-lock mr-1.5 text-slate-400" id="icon-owner-desktop"></i> Dashboard Pemilik
-          </button>
-        </div>
-
-        <!-- Mobile Hamburger Button -->
-        <div class="sm:hidden flex items-center">
-          <button type="button" onclick="toggleSidebar(true)" aria-label="Buka Menu" class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95">
-            <i class="fa-solid fa-bars text-lg"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Mobile Sidebar Drawer & Overlay -->
-  <div id="sidebar-overlay" onclick="toggleSidebar(false)" style="display:none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 sm:hidden"></div>
-  
-  <div id="sidebar-menu" style="display:none;" class="fixed top-0 right-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col justify-between sm:hidden no-print">
-    <div>
-      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-lg bg-[#2fa4ff] flex items-center justify-center p-1 shadow-sm">
-            <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-              <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-              <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="flex items-baseline font-black tracking-tight text-base">
-            <span class="ms-logo-text">MS</span><span class="text-[#004ca8]">Roomstay</span>
-          </div>
-        </div>
-        <button type="button" onclick="toggleSidebar(false)" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
-      </div>
-
-      <div class="p-3 space-y-2">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3.5 py-1">Pilihan Menu</p>
-        <button type="button" onclick="navigateFromSidebar('tenant')" id="btn-tenant-sidebar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition active:bg-blue-100">
-          <div class="w-7 h-7 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-600">
-            <i class="fa-solid fa-user-circle text-sm"></i>
-          </div>
-          <span class="flex-1 text-left">Portal Penyewa</span>
-        </button>
-        <button type="button" onclick="navigateFromSidebar('wifi')" id="btn-wifi-sidebar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100">
-          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-            <i class="fa-solid fa-wifi text-sm"></i>
-          </div>
-          <span class="flex-1 text-left">WiFi & Safebox</span>
-        </button>
-        <button type="button" onclick="navigateFromSidebar('guide')" id="btn-guide-sidebar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100">
-          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-            <i class="fa-solid fa-book-open text-sm"></i>
-          </div>
-          <span class="flex-1 text-left">Panduan</span>
-        </button>
-        <button type="button" onclick="navigateFromSidebar('terms')" id="btn-terms-sidebar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100">
-          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-            <i class="fa-solid fa-file-contract text-sm"></i>
-          </div>
-          <span class="flex-1 text-left">Terma & Syarat</span>
-        </button>
-        <button type="button" onclick="navigateFromSidebar('owner')" id="btn-owner-sidebar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100">
-          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500" id="icon-owner-sidebar">
-            <i class="fa-solid fa-lock text-sm"></i>
-          </div>
-          <span class="flex-1 text-left">Dashboard Pemilik</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="p-4 border-t border-slate-100 space-y-2">
-      <div id="sidebar-owner-lock-section" class="hidden">
-        <button type="button" onclick="logoutOwner(); toggleSidebar(false);" class="w-full py-2.5 px-3 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-1.5 border border-rose-200 active:bg-rose-200">
-          <i class="fa-solid fa-right-from-bracket"></i> Kunci Sesi Pemilik
-        </button>
-      </div>
-      <p class="text-[10px] text-slate-400 text-center font-medium">MSRoomstay @ 2026</p>
-    </div>
-  </div>
-
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 no-print">
     
-    <!-- 1. DASHBOARD PEMILIK -->
-    <div id="view-owner" style="display:none;" class="space-y-3.5 sm:space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-        <div class="flex items-center justify-between sm:justify-start">
-          <div class="flex items-center space-x-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span class="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Pemilik Sah</span>
-          </div>
-          <button type="button" onclick="logoutOwner()" class="sm:hidden px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 rounded-lg border border-rose-200 active:bg-rose-100">
-            Kunci
-          </button>
-        </div>
-        
-        <div class="flex items-center justify-between sm:justify-end space-x-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-          <div class="flex items-center space-x-1.5 w-full sm:w-auto">
-            <label class="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap"><i class="fa-regular fa-calendar mr-1 text-slate-400"></i>Bulan:</label>
-            <select id="select-bulan" onchange="loadOwnerData()" class="flex-1 sm:flex-initial px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"></select>
-            <button type="button" onclick="loadOwnerData()" title="Muat Semula" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition">
-              <i class="fa-solid fa-rotate text-xs"></i>
-            </button>
-          </div>
-          <button type="button" onclick="logoutOwner()" class="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition border border-rose-200">
-            <i class="fa-solid fa-right-from-bracket mr-1"></i> Kunci
-          </button>
-        </div>
-      </div>
-
-      <!-- Kad Pautan Google Form Pendaftaran Penyewa -->
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3.5 sm:p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center space-x-3 text-left w-full sm:w-auto">
-          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white text-lg flex-shrink-0">
-            <i class="fa-solid fa-file-signature"></i>
-          </div>
-          <div>
-            <h4 class="text-xs sm:text-sm font-bold">Google Form Pendaftaran Penyewa</h4>
-            <p class="text-[11px] text-blue-100 mt-0.5">Buka atau salin pautan borang rasmi untuk diberikan kepada bakal penyewa baharu.</p>
-          </div>
-        </div>
-        <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-          <button type="button" onclick="copyGoogleFormLink()" class="px-3.5 py-2 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 active:bg-white/40">
-            <i class="fa-regular fa-copy"></i> Salin Link
-          </button>
-          <button type="button" onclick="openGoogleFormLink()" class="px-4 py-2 bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 active:bg-blue-100">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Form
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-slate-400">Bilik Terisi</span>
-          <div class="text-base sm:text-xl font-bold text-slate-900 mt-0.5"><span id="stat-terisi">-</span> / <span id="stat-total">11</span></div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-amber-600">Bilik Kosong</span>
-          <div class="text-base sm:text-xl font-bold text-amber-600 mt-0.5" id="stat-kosong">-</div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-emerald-600">Kutipan Selesai</span>
-          <div class="text-base sm:text-xl font-bold text-emerald-600 mt-0.5" id="stat-kutipan">RM 0</div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-rose-600">Tunggakan</span>
-          <div class="text-base sm:text-xl font-bold text-rose-600 mt-0.5" id="stat-tunggakan">RM 0</div>
-        </div>
-      </div>
-
-      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-        <div class="flex justify-between items-center mb-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-900">Senarai 11 Bilik</h2>
-          <span class="text-[10px] text-slate-400">Tekan kad untuk kemas kini bayaran</span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5" id="grid-bilik-owner"></div>
-      </div>
-    </div>
-
-    <!-- 2. PORTAL PENYEWA -->
-    <div id="view-tenant" style="display:block;" class="space-y-3.5 sm:space-y-4">
-      <div id="tenant-list-section" class="space-y-3">
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between gap-2">
-          <div>
-            <h1 class="text-sm sm:text-base font-bold text-slate-900 flex items-baseline">
-              Senarai Bilik&nbsp;<span class="ms-logo-text">MS</span><span class="text-[#004ca8]">Roomstay</span>
-            </h1>
-            <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih bilik anda untuk semak bayaran & resit.</p>
-          </div>
-          <button type="button" onclick="loadPublicRooms()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex-shrink-0 active:bg-slate-300">
-            <i class="fa-solid fa-rotate mr-1"></i> Refresh
-          </button>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5" id="grid-bilik-public"></div>
-      </div>
-
-      <!-- Penyata Penyewa & Jadual Bayaran -->
-      <div id="tenant-details" style="display:none;" class="max-w-2xl mx-auto space-y-3 sm:space-y-4">
-        <button type="button" onclick="closeTenantDetails()" class="w-full sm:w-auto px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-sm hover:bg-slate-50 transition flex items-center justify-center active:bg-slate-100">
-          <i class="fa-solid fa-arrow-left mr-1.5"></i> Kembali ke Senarai Bilik
-        </button>
-
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-          <div class="flex justify-between items-start border-b border-slate-100 pb-2.5">
-            <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900" id="t-nama">-</h3>
-              <p class="text-[11px] text-slate-400" id="t-id">-</p>
-            </div>
-            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Penyewa Sah</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5 text-xs">
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Unit Bilik</p>
-              <p class="font-bold text-slate-800 mt-0.5" id="t-bilik">-</p>
-            </div>
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Kadar Sewa</p>
-              <p class="font-bold text-blue-600 mt-0.5" id="t-harga">-</p>
-            </div>
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">No. IC</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-ic">-</p>
-            </div>
-            <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">No. Telefon</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-tel">-</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Tarikh Mula Masuk</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-tarikh">-</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="flex justify-between items-center mb-2.5">
-            <h4 class="text-xs sm:text-sm font-bold text-slate-900">Penyata & Rekod Bayaran</h4>
-            <span class="text-[10px] text-slate-400">Tekan 'Bayar' untuk muat naik resit</span>
-          </div>
-          <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
-            <table class="w-full text-left text-xs min-w-[320px]">
-              <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase">
-                <tr>
-                  <th class="px-2.5 py-2">Bulan</th>
-                  <th class="px-2.5 py-2">Jumlah</th>
-                  <th class="px-2.5 py-2">Status</th>
-                  <th class="px-2.5 py-2 text-right">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody id="t-bayaran-table" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. TAB WIFI & SAFEBOX -->
-    <div id="view-wifi" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-key text-blue-600"></i> MAKLUMAT WIFI & SAFEBOX
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Butiran kata laluan internet dan kod akses kunci pintu rumah MSRoomstay.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Kad WiFi -->
-          <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-wifi"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
-                  <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-2.5 text-xs">
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
-                <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Nama WiFi (SSID):</span>
-                  <span class="font-mono font-bold text-sm text-slate-900">roomstay123</span>
-                </div>
-                <button type="button" onclick="copyToClipboard('roomstay123', 'Nama WiFi')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg transition flex items-center gap-1 active:bg-blue-100">
-                  <i class="fa-regular fa-copy"></i> Salin
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
-                <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kata Laluan (Password):</span>
-                  <span class="font-mono font-bold text-sm text-blue-600">7358@msn</span>
-                </div>
-                <button type="button" onclick="copyToClipboard('7358@msn', 'Kata Laluan WiFi')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg transition flex items-center gap-1 active:bg-blue-100">
-                  <i class="fa-regular fa-copy"></i> Salin
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Kad Safebox -->
-          <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-2.5 text-xs">
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
-                <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kod Pin Safebox:</span>
-                  <span class="font-mono font-black text-lg text-slate-900 tracking-wider">2384</span>
-                </div>
-                <button type="button" onclick="copyToClipboard('2384', 'Kod Pin Safebox')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 rounded-lg transition flex items-center gap-1 active:bg-amber-100">
-                  <i class="fa-regular fa-copy"></i> Salin
-                </button>
-              </div>
-
-              <div class="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl text-[11px] text-amber-900">
-                <p class="leading-relaxed"><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> Sila pastikan peti kunci pintu rumah ditutup rapat dan dipusingkan semula nombornya selepas mengambil atau memulangkan kunci.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. TAB PANDUAN PENGGUNAAN -->
-    <div id="view-guide" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-book-open text-blue-600"></i> PANDUAN PENGGUNAAN PENYEWA
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Panduan lengkap langkah demi langkah untuk penyewa menyemak status dan membuat bayaran.</p>
-        </div>
-
-        <div class="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">A</span>
-              Menyemak Maklumat Asas (WiFi & Safebox)
-            </h4>
-            <p class="pl-8 text-xs text-slate-600 leading-relaxed">
-              Di menu <strong>WiFi & Safebox</strong>, anda boleh mendapatkan butiran penting rumah dengan pantas:
-            </p>
-            <ul class="pl-12 list-disc space-y-1 text-xs text-slate-600">
-              <li><strong>WiFi Rumah:</strong> Nama rangkaian (SSID) dan kata laluan lengkap dengan butang <em>Salin</em>.</li>
-              <li><strong>Peti Kunci Pintu Rumah (Safebox):</strong> Nombor PIN rasmi untuk mengambil dan memulangkan kunci pintu rumah.</li>
-            </ul>
-          </div>
-
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">B</span>
-              Cara Semak Penyata & Bayar Sewa Bulanan
-            </h4>
-            <ol class="pl-8 list-decimal space-y-2 text-xs text-slate-600">
-              <li>Pada paparan utama Portal Penyewa, tekan pada <strong>Kad Bilik Anda</strong> (contoh: <em>Bilik 1</em> atau <em>Bilik 3</em> yang berstatus <em>Disewa</em>).</li>
-              <li>Masukkan <strong>No. Kad Pengenalan (No. IC)</strong> anda yang berdaftar untuk tujuan keselamatan dan pengesahan.</li>
-              <li>Setelah berjaya disahkan, anda akan dibawa ke paparan <strong>Penyata & Rekod Bayaran</strong>:
-                <ul class="list-disc pl-5 mt-1 space-y-1">
-                  <li>Lihat senarai bulan sewaan dan status bayaran sama ada <em>Selesai</em> atau <em>Tertunggak</em>.</li>
-                  <li>Bagi bulan yang belum dibayar, tekan butang hijau <strong>"Bayar"</strong>.</li>
-                  <li>Muat naik resit / bukti pemindahan wang (format gambar JPG, PNG atau PDF) dan tekan <strong>"Hantar Bayaran"</strong>.</li>
-                  <li>Sistem akan automatik membuka aplikasi <strong>WhatsApp</strong> dengan teks mesej siap sedia untuk memaklumkan kepada pemilik bahawa resit telah dimuat naik.</li>
-                </ul>
-              </li>
-            </ol>
-          </div>
-
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">C</span>
-              Cetak Resit Rasmi
-            </h4>
-            <p class="pl-8 text-xs text-slate-600 leading-relaxed">
-              Bagi bayaran yang telah disahkan <em>Selesai</em> oleh pemilik, anda boleh menekan butang <strong>"Resit"</strong> untuk melihat paparan resit rasmi berformat A4. Anda boleh terus mencetak atau menyimpannya sebagai fail PDF untuk rujukan peribadi anda.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. TAB TERMA & SYARAT -->
-    <div id="view-terms" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-scale-balanced text-blue-600"></i> TERMA & SYARAT BILIK SEWA
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Sila baca dan fahami garis panduan sewaan bagi menjaga keharmonian bersama.</p>
-        </div>
-
-        <div class="space-y-3.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">1</span>
-              Bayaran Sewa
-            </h4>
-            <p class="pl-7 text-xs text-slate-600 leading-relaxed">
-              Bayaran sewa hendaklah dibuat sebelum atau pada <strong>1 haribulan</strong> setiap bulan. Bayaran yang lewat tanpa sebab munasabah boleh dikenakan denda atau tindakan yang bersesuaian.
-            </p>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">2</span>
-              Deposit
-            </h4>
-            <p class="pl-7 text-xs text-slate-600 leading-relaxed">
-              Deposit sebanyak <strong>1 bulan sewa</strong> diperlukan sebelum memasuki bilik. Deposit akan dipulangkan selepas tamat tempoh sewaan, tertakluk kepada syarat dan pemeriksaan bilik.
-            </p>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">3</span>
-              Tempoh Sewaan & Notis
-            </h4>
-            <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-circle-chevron-right text-blue-500 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Tempoh minimum sewaan adalah <strong>3 bulan</strong>.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-circle-chevron-right text-blue-500 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Penyewa wajib memberikan notis keluar sekurang-kurangnya <strong>30 hari</strong> sebelum tarikh keluar.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-circle-chevron-right text-rose-500 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span class="text-rose-900 font-medium">Kegagalan memberikan notis yang mencukupi boleh menyebabkan deposit tidak dipulangkan.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">4</span>
-              Bil & Kemudahan Termasuk
-            </h4>
-            <p class="pl-7 text-xs text-slate-600">Bayaran sewaan bulanan telah merangkumi kemudahan percuma berikut:</p>
-            <div class="pl-7 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
-              <div class="bg-white p-2 rounded-lg border border-slate-100 flex items-center gap-2 text-xs font-semibold text-slate-800">
-                <i class="fa-solid fa-bolt text-amber-500"></i> Elektrik
-              </div>
-              <div class="bg-white p-2 rounded-lg border border-slate-100 flex items-center gap-2 text-xs font-semibold text-slate-800">
-                <i class="fa-solid fa-droplet text-blue-500"></i> Air
-              </div>
-              <div class="bg-white p-2 rounded-lg border border-slate-100 flex items-center gap-2 text-xs font-semibold text-slate-800">
-                <i class="fa-solid fa-faucet-detergent text-cyan-600"></i> Coway
-              </div>
-              <div class="bg-white p-2 rounded-lg border border-slate-100 flex items-center gap-2 text-xs font-semibold text-slate-800">
-                <i class="fa-solid fa-wifi text-emerald-500"></i> WiFi
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">5</span>
-              Kebersihan
-            </h4>
-            <p class="pl-7 text-xs text-slate-600">Penyewa bertanggungjawab menjaga kebersihan bilik dan kawasan bersama pada setiap masa:</p>
-            <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-trash-can text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Sampah hendaklah dibuang setiap hari.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-broom text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Bilik dan kawasan bersama hendaklah sentiasa bersih dan kemas.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-circle-exclamation text-amber-500 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Caj pembersihan boleh dikenakan sekiranya bilik atau kawasan yang digunakan didapati terlalu kotor.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">6</span>
-              Peraturan Rumah
-            </h4>
-            <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-volume-xmark text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Tidak dibenarkan membuat bising selepas jam <strong>10.00 malam</strong>.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-user-lock text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Tidak dibenarkan membawa masuk orang luar tanpa kebenaran tuan rumah.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-ban text-rose-500 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span class="text-rose-900 font-semibold">Dilarang sama sekali menjalankan sebarang aktiviti yang menyalahi undang-undang.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">7</span>
-              Larangan & Pengubahsuaian
-            </h4>
-            <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-paw text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Haiwan peliharaan boleh dipertimbangkan dan tertakluk kepada kebenaran tuan rumah terlebih dahulu.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-screwdriver-wrench text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Sebarang pengubahsuaian atau perubahan pada bilik hendaklah mendapat kebenaran tuan rumah terlebih dahulu.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">8</span>
-              Kerosakan & Kehilangan
-            </h4>
-            <p class="pl-7 text-xs text-slate-600 leading-relaxed">
-              Sebarang kerosakan atau kehilangan yang berpunca daripada kecuaian atau tindakan penyewa hendaklah ditanggung sepenuhnya oleh penyewa.
-            </p>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">9</span>
-              Keselamatan
-            </h4>
-            <p class="pl-7 text-xs text-slate-600">Penyewa hendaklah mematuhi langkah keselamatan berikut:</p>
-            <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-lock text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Memastikan pintu sentiasa dikunci apabila keluar atau berada di dalam bilik.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-power-off text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Menutup lampu, kipas dan peralatan elektrik apabila tidak digunakan.</span>
-              </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                <i class="fa-solid fa-plug-circle-xmark text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
-                <span>Memastikan plug atau soket yang tidak digunakan ditutup bagi mengelakkan sebarang risiko keselamatan.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">10</span>
-              Penamatan Sewaan
-            </h4>
-            <p class="pl-7 text-xs text-slate-600 leading-relaxed">
-              Tuan rumah berhak menamatkan perjanjian sewaan sekiranya penyewa didapati melanggar mana-mana terma dan syarat yang telah ditetapkan.
-            </p>
-          </div>
-        </div>
-
-        <div class="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start space-x-2.5">
-          <i class="fa-solid fa-circle-check text-blue-600 text-base mt-0.5 flex-shrink-0"></i>
-          <p class="leading-relaxed">
-            <strong>Persetujuan Penyewa:</strong> Dengan membuat bayaran deposit dan/atau menduduki bilik, penyewa dianggap telah membaca, memahami dan bersetuju dengan semua terma dan syarat yang ditetapkan oleh <strong>MS Roomstay</strong>.
-          </p>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <script>
-    // URL Web App Apps Script anda
-    const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbx9_fKb4P-UpuXP0NGq2i6pbhnjRdgGoD9YbKlTIJiPqD699z8VfmcK7Vp6bAdzeGfBlg/exec";
-    const GOOGLE_FORM_URL = "https://forms.gle/2XcGo37g7pqPNkan9";
-
-    let currentRooms = [];
-    let currentSelectedMonth = "September 2026";
-    let activeModalTenant = null;
-    let currentTenantProfile = null;
-    let currentTenantPayments = [];
-    let authenticatedPassword = null;
-    let confirmCallback = null;
-
-    // Helper API Call (CORS-friendly)
-    async function apiGet(params) {
-      const url = new URL(APPS_SCRIPT_API_URL);
-      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-      const response = await fetch(url.toString(), { method: 'GET' });
-      return await response.json();
-    }
-
-    async function apiPost(data) {
-      const response = await fetch(APPS_SCRIPT_API_URL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-      });
-      return await response.json();
-    }
-
-    function openGoogleFormLink() {
-      window.open(GOOGLE_FORM_URL, "_blank");
-    }
-
-    function copyGoogleFormLink() {
-      copyToClipboard(GOOGLE_FORM_URL, "Pautan Google Form");
-    }
-
-    function showModalDirect(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'flex';
-    }
-
-    function closeModalDirect(id) {
-      if (document.activeElement && typeof document.activeElement.blur === 'function') {
-        document.activeElement.blur();
-      }
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    }
-
-    function toggleSidebar(show) {
-      if (document.activeElement && typeof document.activeElement.blur === 'function') {
-        document.activeElement.blur();
-      }
-      const overlay = document.getElementById('sidebar-overlay');
-      const drawer = document.getElementById('sidebar-menu');
-      if (!overlay || !drawer) return;
-      if (show) {
-        overlay.style.display = 'block';
-        drawer.style.display = 'flex';
-      } else {
-        overlay.style.display = 'none';
-        drawer.style.display = 'none';
-      }
-    }
-
-    function navigateFromSidebar(view) {
-      toggleSidebar(false);
-      setTimeout(() => {
-        if (view === 'owner') {
-          requestOwnerAccess();
-        } else {
-          switchView(view);
-        }
-      }, 50);
-    }
-
-    function updateSidebarUI() {
-      const iconDesktop = document.getElementById('icon-owner-desktop');
-      const lockSection = document.getElementById('sidebar-owner-lock-section');
-
-      if (authenticatedPassword) {
-        if (iconDesktop) iconDesktop.className = "fa-solid fa-lock-open mr-1.5 text-emerald-600";
-        if (lockSection) lockSection.classList.remove('hidden');
-      } else {
-        if (iconDesktop) iconDesktop.className = "fa-solid fa-lock mr-1.5 text-slate-400";
-        if (lockSection) lockSection.classList.add('hidden');
-      }
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const toast = document.createElement('div');
-      
-      let bgClass = 'bg-slate-900 text-white border-slate-800';
-      let icon = 'fa-info-circle text-blue-400';
-
-      if (type === 'success') {
-        bgClass = 'bg-emerald-950 text-emerald-100 border-emerald-800';
-        icon = 'fa-circle-check text-emerald-400';
-      } else if (type === 'error') {
-        bgClass = 'bg-rose-950 text-rose-100 border-rose-800';
-        icon = 'fa-circle-exclamation text-rose-400';
-      } else if (type === 'warning') {
-        bgClass = 'bg-amber-950 text-amber-100 border-amber-800';
-        icon = 'fa-triangle-exclamation text-amber-400';
-      }
-
-      toast.className = `pointer-events-auto flex items-center space-x-2.5 px-3.5 py-2.5 rounded-xl border shadow-2xl text-xs font-bold toast-enter ${bgClass}`;
-      toast.innerHTML = `<i class="fa-solid ${icon} text-sm flex-shrink-0"></i><span class="flex-1 leading-snug">${message}</span>`;
-
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.remove('toast-enter');
-        toast.classList.add('toast-exit');
-        setTimeout(() => toast.remove(), 250);
-      }, 3200);
-    }
-
-    function copyToClipboard(text, label) {
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => {
-          showToast(`${label} disalin: ${text}`, 'success');
-        });
-      } else {
-        const tempInput = document.createElement("input");
-        tempInput.value = text;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        showToast(`${label} disalin: ${text}`, 'success');
-      }
-    }
-
-    function showConfirmModal(title, message, onConfirm, isDanger = true) {
-      document.getElementById('confirm-title').innerText = title;
-      document.getElementById('confirm-message').innerText = message;
-      
-      const iconWrap = document.getElementById('confirm-icon-wrapper');
-      const btnAction = document.getElementById('btn-confirm-action');
-
-      if (isDanger) {
-        iconWrap.className = 'w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-base';
-        btnAction.className = 'w-1/2 py-2.5 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition shadow-sm';
-      } else {
-        iconWrap.className = 'w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-base';
-        btnAction.className = 'w-1/2 py-2.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm';
-      }
-
-      confirmCallback = onConfirm;
-      showModalDirect('modal-confirm');
-    }
-
-    function closeConfirmModal(isConfirmed) {
-      closeModalDirect('modal-confirm');
-      if (isConfirmed && typeof confirmCallback === 'function') {
-        confirmCallback();
-      }
-      confirmCallback = null;
-    }
-
-    function setupMonthDropdown() {
-      const dropdown = document.getElementById('select-bulan');
-      if (!dropdown) return;
-      dropdown.innerHTML = '';
-      
-      const senaraiKitaran = [
-        "September 2026", "Oktober 2026", "November 2026", "Disember 2026",
-        "Januari 2027", "Februari 2027", "Mac 2027", "April 2027",
-        "Mei 2027", "Jun 2027", "Julai 2027", "Ogos 2027", "September 2027"
-      ];
-
-      const senaraiBulanMelayu = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
-      const now = new Date();
-      const currentMonthYear = senaraiBulanMelayu[now.getMonth()] + " " + now.getFullYear();
-
-      let defaultFound = false;
-
-      senaraiKitaran.forEach((str) => {
-        const opt = document.createElement('option');
-        opt.value = str;
-        opt.innerText = str;
-        
-        if (str === currentMonthYear) {
-          opt.selected = true;
-          currentSelectedMonth = str;
-          defaultFound = true;
-        }
-        dropdown.appendChild(opt);
-      });
-
-      if (!defaultFound && senaraiKitaran.length > 0) {
-        dropdown.options[0].selected = true;
-        currentSelectedMonth = senaraiKitaran[0];
-      }
-    }
-
-    async function loadPublicRooms() {
-      const container = document.getElementById('grid-bilik-public');
-      if (!container) return;
-      container.innerHTML = `
-        <div class="col-span-full py-8 text-center text-slate-400 text-xs">
-          <i class="fa-solid fa-spinner fa-spin mr-1"></i> Sedang memuatkan senarai bilik...
-        </div>
-      `;
-
-      try {
-        const res = await apiGet({ action: "getPublicRooms" });
-        if (res.success) {
-          renderPublicRooms(res.data);
-        } else {
-          container.innerHTML = `<div class="col-span-full py-4 text-center text-rose-500 text-xs bg-rose-50 rounded-xl">Gagal memuatkan bilik.</div>`;
-        }
-      } catch (err) {
-        container.innerHTML = `<div class="col-span-full py-4 text-center text-rose-500 text-xs bg-rose-50 rounded-xl">Ralat sambungan.</div>`;
-        showToast('Gagal berhubung dengan server API.', 'error');
-      }
-    }
-
-    function renderPublicRooms(rooms) {
-      const container = document.getElementById('grid-bilik-public');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (!rooms || rooms.length === 0) {
-        container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs">Tiada bilik ditemui.</div>`;
-        return;
-      }
-
-      rooms.forEach(b => {
-        const isOccupied = (b.status === 'Berpenghuni' || (b.namaPenyewa && b.namaPenyewa !== ''));
-        const card = document.createElement('div');
-        
-        card.className = `p-3.5 sm:p-4 rounded-xl border transition-all ${
-          !isOccupied 
-            ? 'bg-slate-50/70 border-slate-200 cursor-pointer hover:border-slate-400' 
-            : 'bg-white border-slate-200 hover:border-blue-500 hover:shadow-md cursor-pointer active:scale-95'
-        }`;
-
-        card.onclick = () => {
-          if (!isOccupied) {
-            showToast(`${b.nama} masih kosong dan belum berpenghuni.`, 'info');
-          } else {
-            openTenantAuthModal(b.id, b.nama, b.namaPenyewa || 'Penyewa Berdaftar');
-          }
-        };
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${b.id}</span>
-              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">${b.nama}</h3>
-            </div>
-            <span class="px-2 py-0.5 rounded text-[9px] font-bold ${
-              !isOccupied ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-            }">${!isOccupied ? 'Kosong' : 'Disewa'}</span>
-          </div>
-          
-          <div class="mt-2.5 pt-2.5 border-t border-slate-100 text-[11px]">
-            <span class="text-slate-400 block text-[9px]">Penyewa:</span>
-            <span class="font-bold text-slate-800 truncate block mt-0.5">${!isOccupied ? '—' : (b.namaPenyewa || 'Penyewa Berdaftar')}</span>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function openTenantAuthModal(roomId, roomName, tenantName) {
-      document.getElementById('auth-room-id').value = roomId;
-      document.getElementById('auth-modal-room-name').innerText = roomName || roomId;
-      document.getElementById('auth-modal-tenant-name').innerText = tenantName || '-';
-      document.getElementById('tenant-ic-input').value = '';
-      document.getElementById('tenant-auth-error').classList.add('hidden');
-      showModalDirect('modal-tenant-auth');
-    }
-
-    async function handleTenantAuthSubmit(e) {
-      e.preventDefault();
-      const roomId = document.getElementById('auth-room-id').value;
-      const ic = document.getElementById('tenant-ic-input').value;
-      const btn = document.getElementById('btn-tenant-auth-submit');
-      const err = document.getElementById('tenant-auth-error');
-
-      btn.innerText = '...';
-      btn.disabled = true;
-      err.classList.add('hidden');
-
-      try {
-        const res = await apiGet({ action: "verifyTenantAccess", roomId: roomId, ic: ic });
-        btn.innerText = 'Sahkan';
-        btn.disabled = false;
-        if (res.success) {
-          closeModalDirect('modal-tenant-auth');
-          renderTenantDetails(res.data);
-          showToast('Akses berjaya disahkan!', 'success');
-        } else {
-          err.innerText = res.message || 'No. IC tidak sepadan!';
-          err.classList.remove('hidden');
-          showToast('No. IC tidak sepadan.', 'error');
-        }
-      } catch (e) {
-        btn.innerText = 'Sahkan';
-        btn.disabled = false;
-        err.innerText = 'Ralat sambungan API.';
-        err.classList.remove('hidden');
-        showToast('Ralat sambungan API.', 'error');
-      }
-    }
-
-    function renderTenantDetails(t) {
-      currentTenantProfile = t;
-      currentTenantPayments = (t && t.bayaran) ? t.bayaran : [];
-
-      const listSec = document.getElementById('tenant-list-section');
-      const detailSec = document.getElementById('tenant-details');
-      if (listSec) listSec.style.display = 'none';
-      if (detailSec) detailSec.style.display = 'block';
-
-      document.getElementById('t-nama').innerText = t.nama || '-';
-      document.getElementById('t-id').innerText = 'ID: ' + (t.id || '-');
-      document.getElementById('t-bilik').innerText = t.namaBilik || '-';
-      document.getElementById('t-harga').innerText = 'RM ' + (t.kadarSewa || 0) + ' / bulan';
-      document.getElementById('t-ic').innerText = t.ic || '-';
-      document.getElementById('t-tel').innerText = t.tel || '-';
-      document.getElementById('t-tarikh').innerText = t.tarikhMasuk || '-';
-
-      const tbody = document.getElementById('t-bayaran-table');
-      tbody.innerHTML = '';
-
-      if (!currentTenantPayments || currentTenantPayments.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td class="px-3 py-3 font-medium text-slate-800 text-xs">Bulan Semasa (${currentSelectedMonth})</td>
-            <td class="px-3 py-3 text-slate-600 text-xs">RM ${t.kadarSewa || 350}</td>
-            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span></td>
-            <td class="px-3 py-3 text-right">
-              <button type="button" onclick="openPayTenantModal('${currentSelectedMonth}', ${t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm">
-                <i class="fa-solid fa-credit-card"></i> Bayar
-              </button>
-            </td>
-          </tr>
-        `;
-      } else {
-        currentTenantPayments.forEach((p, idx) => {
-          const st = (p.status || '').toString().trim().toLowerCase();
-          const isSelesai = (st === 'selesai' || st === 'lunas');
-          const isPending = (st === 'menunggu pengesahan');
-
-          let badgeHtml = '';
-          let actionBtn = '';
-
-          if (isSelesai) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>`;
-            actionBtn = `<button type="button" onclick="viewReceipt(${idx})" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition inline-flex items-center gap-1 active:scale-95"><i class="fa-solid fa-file-invoice"></i> Resit</button>`;
-          } else if (isPending) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">Menunggu Pengesahan</span>`;
-            actionBtn = `<span class="text-slate-400 text-xs italic">Sedang Disemak</span>`;
-          } else {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span>`;
-            actionBtn = `<button type="button" onclick="openPayTenantModal('${p.bulan}', ${p.jumlah || t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm"><i class="fa-solid fa-credit-card"></i> Bayar</button>`;
-          }
-
-          tbody.innerHTML += `
-            <tr>
-              <td class="px-3 py-3 font-medium text-slate-800 text-xs">${p.bulan || '-'}</td>
-              <td class="px-3 py-3 text-slate-600 text-xs">RM ${p.jumlah || t.kadarSewa || 350}</td>
-              <td class="px-3 py-3">${badgeHtml}</td>
-              <td class="px-3 py-3 text-right">${actionBtn}</td>
-            </tr>
-          `;
-        });
-      }
-    }
-
-    function closeTenantDetails() {
-      const listSec = document.getElementById('tenant-list-section');
-      const detailSec = document.getElementById('tenant-details');
-      if (detailSec) detailSec.style.display = 'none';
-      if (listSec) listSec.style.display = 'block';
-    }
-
-    function openPayTenantModal(bulan, jumlah) {
-      if (!currentTenantProfile) return;
-      document.getElementById('pay-modal-month-label').innerText = `Sewa Bulan: ${bulan}`;
-      document.getElementById('pay-modal-amount').innerText = `RM ${jumlah}`;
-      document.getElementById('pay-tenant-month').value = bulan;
-      document.getElementById('pay-tenant-file').value = '';
-      showModalDirect('modal-pay-tenant');
-    }
-
-    function handleTenantPaymentSubmit(e) {
-      e.preventDefault();
-      if (!currentTenantProfile) return;
-
-      const fileInput = document.getElementById('pay-tenant-file');
-      const file = fileInput ? fileInput.files[0] : null;
-      const bulan = document.getElementById('pay-tenant-month').value;
-      const btn = document.getElementById('btn-submit-tenant-pay');
-
-      if (!file) {
-        showToast('Sila muat naik resit/bukti bayaran!', 'warning');
-        return;
-      }
-
-      btn.innerText = 'Memproses...';
-      btn.disabled = true;
-
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        const base64Data = evt.target.result.split(',')[1];
-        const payload = {
-          idPenyewa: currentTenantProfile.id,
-          ic: currentTenantProfile.ic,
-          bulan: bulan,
-          fileData: {
-            base64: base64Data,
-            mimeType: file.type,
-            filename: file.name
-          }
-        };
-
-        try {
-          const res = await apiPost({ action: "submitTenantPayment", payload: payload });
-          btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
-          btn.disabled = false;
-          if (res.success) {
-            closeModalDirect('modal-pay-tenant');
-            showToast(res.message || 'Bukti bayaran berjaya dihantar!', 'success');
-            
-            if (res.whatsappUrl) {
-              window.open(res.whatsappUrl, '_blank');
-            }
-
-            const freshRes = await apiGet({ action: "verifyTenantAccess", roomId: currentTenantProfile.bilikId, ic: currentTenantProfile.ic });
-            if (freshRes.success) {
-              renderTenantDetails(freshRes.data);
-            }
-          } else {
-            showToast(res.message || 'Gagal menghantar bayaran.', 'error');
-          }
-        } catch (err) {
-          btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran';
-          btn.disabled = false;
-          showToast('Ralat API: ' + err.message, 'error');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function viewReceipt(idx) {
-      const p = currentTenantPayments[idx];
-      if (!p || !currentTenantProfile) return;
-
-      const rawResit = (p.resit || '').toString().trim();
-      let resitNo = 'REC-AUTO';
-
-      if (rawResit.includes('|')) {
-        resitNo = rawResit.split('|')[0].trim();
-      } else if (rawResit !== '-') {
-        resitNo = rawResit;
-      }
-
-      document.getElementById('rcpt-no').innerText = resitNo;
-      document.getElementById('rcpt-date').innerText = 'Tarikh: ' + (p.tarikh || '-');
-      document.getElementById('rcpt-tenant-name').innerText = currentTenantProfile.nama || '-';
-      document.getElementById('rcpt-tenant-ic').innerText = currentTenantProfile.ic || '-';
-      document.getElementById('rcpt-tenant-tel').innerText = currentTenantProfile.tel || '-';
-      document.getElementById('rcpt-room-name').innerText = currentTenantProfile.namaBilik || '-';
-      document.getElementById('rcpt-tenant-id').innerText = currentTenantProfile.id || '-';
-      document.getElementById('rcpt-item-month').innerText = p.bulan || '-';
-      document.getElementById('rcpt-amount').innerText = Number(p.jumlah || 0).toFixed(2);
-      document.getElementById('rcpt-total').innerText = 'RM ' + Number(p.jumlah || 0).toFixed(2);
-
-      showModalDirect('modal-receipt');
-    }
-
-    function requestOwnerAccess() {
-      if (authenticatedPassword) {
-        switchView('owner');
-        loadOwnerData();
-      } else {
-        const passInput = document.getElementById('owner-pass-input');
-        const passErr = document.getElementById('pass-error');
-        
-        if (passInput) passInput.value = '';
-        if (passErr) passErr.classList.add('hidden');
-        
-        showModalDirect('modal-password');
-      }
-    }
-
-    async function handlePasswordSubmit(e) {
-      e.preventDefault();
-      const pass = document.getElementById('owner-pass-input').value;
-      const btn = document.getElementById('btn-pass-submit');
-      btn.innerText = '...';
-      btn.disabled = true;
-
-      try {
-        const res = await apiGet({ action: "verifyOwnerPassword", password: pass });
-        btn.innerText = 'Masuk';
-        btn.disabled = false;
-        if (res.success) {
-          authenticatedPassword = pass;
-          closeModalDirect('modal-password');
-          updateSidebarUI();
-          switchView('owner');
-          loadOwnerData();
-          showToast('Selamat datang ke Dashboard Pemilik!', 'success');
-        } else {
-          document.getElementById('pass-error').classList.remove('hidden');
-          showToast('Kata laluan tidak tepat!', 'error');
-        }
-      } catch (err) {
-        btn.innerText = 'Masuk';
-        btn.disabled = false;
-        document.getElementById('pass-error').classList.remove('hidden');
-        showToast('Ralat pengesahan kata laluan.', 'error');
-      }
-    }
-
-    function logoutOwner() {
-      authenticatedPassword = null;
-      updateSidebarUI();
-      switchView('tenant');
-      showToast('Dashboard pemilik dikunci.', 'info');
-    }
-
-    function switchView(view) {
-      if (document.activeElement && typeof document.activeElement.blur === 'function') {
-        document.activeElement.blur();
-      }
-
-      const btnOwnerDesk = document.getElementById('btn-owner-desktop');
-      const btnTenantDesk = document.getElementById('btn-tenant-desktop');
-      const btnWifiDesk = document.getElementById('btn-wifi-desktop');
-      const btnTermsDesk = document.getElementById('btn-terms-desktop');
-      const btnGuideDesk = document.getElementById('btn-guide-desktop');
-
-      const viewOwner = document.getElementById('view-owner');
-      const viewTenant = document.getElementById('view-tenant');
-      const viewWifi = document.getElementById('view-wifi');
-      const viewTerms = document.getElementById('view-terms');
-      const viewGuide = document.getElementById('view-guide');
-
-      if (viewOwner) viewOwner.style.display = 'none';
-      if (viewTenant) viewTenant.style.display = 'none';
-      if (viewWifi) viewWifi.style.display = 'none';
-      if (viewTerms) viewTerms.style.display = 'none';
-      if (viewGuide) viewGuide.style.display = 'none';
-
-      [btnOwnerDesk, btnTenantDesk, btnWifiDesk, btnTermsDesk, btnGuideDesk].forEach(btn => {
-        if (btn) btn.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition";
-      });
-
-      const sidebarBtns = ['tenant', 'wifi', 'guide', 'terms', 'owner'];
-      sidebarBtns.forEach(s => {
-        const sbBtn = document.getElementById('btn-' + s + '-sidebar');
-        if (sbBtn) {
-          sbBtn.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition";
-        }
-      });
-
-      if (view === 'owner') {
-        if (!authenticatedPassword) {
-          requestOwnerAccess();
-          return;
-        }
-        if (viewOwner) viewOwner.style.display = 'block';
-        if (btnOwnerDesk) btnOwnerDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
-        const sbOwner = document.getElementById('btn-owner-sidebar');
-        if (sbOwner) sbOwner.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition";
-      } else if (view === 'wifi') {
-        if (viewWifi) viewWifi.style.display = 'block';
-        if (btnWifiDesk) btnWifiDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
-        const sbWifi = document.getElementById('btn-wifi-sidebar');
-        if (sbWifi) sbWifi.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition";
-      } else if (view === 'guide') {
-        if (viewGuide) viewGuide.style.display = 'block';
-        if (btnGuideDesk) btnGuideDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
-        const sbGuide = document.getElementById('btn-guide-sidebar');
-        if (sbGuide) sbGuide.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition";
-      } else if (view === 'terms') {
-        if (viewTerms) viewTerms.style.display = 'block';
-        if (btnTermsDesk) btnTermsDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
-        const sbTerms = document.getElementById('btn-terms-sidebar');
-        if (sbTerms) sbTerms.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition";
-      } else {
-        if (viewTenant) viewTenant.style.display = 'block';
-        if (btnTenantDesk) btnTenantDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
-        const sbTenant = document.getElementById('btn-tenant-sidebar');
-        if (sbTenant) sbTenant.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 transition";
-        closeTenantDetails();
-        loadPublicRooms();
-      }
-    }
-
-    async function loadOwnerData() {
-      if (!authenticatedPassword) return;
-      const selectedMonth = document.getElementById('select-bulan').value || currentSelectedMonth;
-      currentSelectedMonth = selectedMonth;
-
-      try {
-        const res = await apiGet({ action: "getOwnerDashboardData", month: selectedMonth, password: authenticatedPassword });
-        if (res.success) {
-          renderOwnerDashboard(res.data);
-        } else {
-          showToast('Gagal memuatkan data pemilik: ' + res.message, 'error');
-        }
-      } catch (err) {
-        showToast('Ralat sambungan API: ' + err.message, 'error');
-      }
-    }
-
-    function renderOwnerDashboard(data) {
-      currentRooms = data.bilikList;
-      currentSelectedMonth = data.selectedMonth;
-
-      const dropdown = document.getElementById('select-bulan');
-      if (dropdown && dropdown.value !== currentSelectedMonth) {
-        dropdown.value = currentSelectedMonth;
-      }
-
-      document.getElementById('stat-total').innerText = data.stats.totalBilik;
-      document.getElementById('stat-terisi').innerText = data.stats.bilikTerisi;
-      document.getElementById('stat-kosong').innerText = data.stats.bilikKosong;
-      document.getElementById('stat-kutipan').innerText = 'RM ' + data.stats.kutipanBulanan;
-      document.getElementById('stat-tunggakan').innerText = 'RM ' + data.stats.jumlahTertunggak;
-
-      const container = document.getElementById('grid-bilik-owner');
-      if (!container) return;
-      container.innerHTML = '';
-
-      data.bilikList.forEach(b => {
-        const isKosong = b.status === 'Kosong';
-        const card = document.createElement('div');
-        
-        let paymentBadge = '';
-        let cardBgClass = 'bg-white border-slate-200';
-
-        if (!isKosong && b.penyewa && b.bayaranSemasa) {
-          const st = (b.bayaranSemasa.status || '').toString().trim().toLowerCase();
-          if (st === 'selesai' || st === 'lunas') {
-            cardBgClass = 'bg-emerald-50/50 border-emerald-300';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">✓ Selesai</span>`;
-          } else if (st === 'menunggu pengesahan') {
-            cardBgClass = 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-400/30';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 animate-pulse">Perlu Sahkan</span>`;
-          } else {
-            cardBgClass = 'bg-rose-50/50 border-rose-300';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800">✕ Tertunggak</span>`;
-          }
-        }
-
-        card.className = `p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
-        card.onclick = () => openModal(b.id);
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${b.id}</span>
-              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">${b.nama}</h3>
-            </div>
-            ${isKosong ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 text-amber-800">Kosong</span>' : paymentBadge}
-          </div>
-          
-          <div class="mt-2.5 pt-2.5 border-t border-slate-100 text-[10px] sm:text-[11px] space-y-0.5">
-            <div class="flex justify-between text-slate-500">
-              <span>Sewa:</span>
-              <span class="font-bold text-blue-600">RM${b.harga}</span>
-            </div>
-            <div class="flex justify-between text-slate-500">
-              <span>Penyewa:</span>
-              <span class="font-medium text-slate-800 truncate max-w-[75px] sm:max-w-[100px]">${b.penyewa ? b.penyewa.nama : '—'}</span>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function openModal(bilikId) {
-      const b = currentRooms.find(r => r.id === bilikId);
-      if (!b) return;
-
-      const activeDropdownMonth = document.getElementById('select-bulan').value || currentSelectedMonth;
-      currentSelectedMonth = activeDropdownMonth;
-
-      document.getElementById('modal-title').innerText = `Kemas Kini ${b.nama}`;
-      document.getElementById('modal-subtitle').innerText = `ID Unit: ${b.id}`;
-      document.getElementById('form-idBilik').value = b.id;
-      document.getElementById('form-jenis').value = b.jenis;
-      document.getElementById('form-harga').value = b.harga;
-      document.getElementById('form-status').value = b.status;
-
-      const quickPay = document.getElementById('quick-pay-section');
-      const fileInput = document.getElementById('owner-receipt-file');
-      const btnDelete = document.getElementById('btn-delete-tenant');
-      if (fileInput) fileInput.value = '';
-
-      if (btnDelete) {
-        btnDelete.innerHTML = '<i class="fa-solid fa-user-xmark"></i> Padam Penyewa';
-        btnDelete.disabled = false;
-      }
-
-      if (b.penyewa) {
-        activeModalTenant = b.penyewa;
-        document.getElementById('form-namaPenyewa').value = b.penyewa.nama || '';
-        document.getElementById('form-telPenyewa').value = b.penyewa.tel || '';
-        document.getElementById('form-icPenyewa').value = b.penyewa.ic || '';
-        document.getElementById('form-tarikhMasuk').value = b.penyewa.tarikh || '';
-
-        quickPay.classList.remove('hidden');
-        btnDelete.classList.remove('hidden');
-
-        document.getElementById('modal-active-month').innerText = currentSelectedMonth;
-        
-        const rawStatus = (b.bayaranSemasa && b.bayaranSemasa.status ? b.bayaranSemasa.status : 'Tertunggak').toString().trim();
-        const stLower = rawStatus.toLowerCase();
-        
-        const isSelesai = (stLower === 'selesai' || stLower === 'lunas');
-        const isPending = (stLower === 'menunggu pengesahan');
-
-        const badge = document.getElementById('modal-pay-badge');
-        const btnToggle = document.getElementById('btn-toggle-pay');
-        const btnReject = document.getElementById('btn-reject-pay');
-        const uploadWrapper = document.getElementById('upload-receipt-wrapper');
-
-        document.getElementById('modal-pay-amount').innerText = 'RM ' + b.harga;
-        
-        const resitStr = (b.bayaranSemasa && b.bayaranSemasa.resit ? b.bayaranSemasa.resit : '').toString();
-        let uploadedUrl = '';
-        if (resitStr.includes('http')) {
-          if (resitStr.includes('|')) {
-            uploadedUrl = resitStr.split('|')[1].trim();
-          } else {
-            uploadedUrl = resitStr.trim();
-          }
-        }
-
-        if (isSelesai) {
-          badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800";
-          badge.innerText = "SELESAI";
-          btnReject.classList.add('hidden');
-          btnToggle.className = "w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition";
-          btnToggle.innerHTML = '<i class="fa-solid fa-rotate-left mr-1"></i> Tukar ke Tertunggak';
-          
-          if (uploadedUrl) {
-            uploadWrapper.classList.remove('hidden');
-            uploadWrapper.innerHTML = `
-              <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5 text-left">
-                <span class="text-[11px] font-bold text-emerald-900 block"><i class="fa-solid fa-file-circle-check mr-1 text-emerald-600"></i> Dokumen Pembayaran Disahkan:</span>
-                <a href="${uploadedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 underline hover:text-blue-800 py-1">
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Resit / Bukti
-                </a>
-              </div>
-            `;
-          } else {
-            uploadWrapper.classList.add('hidden');
-          }
-        } else if (isPending) {
-          badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 animate-pulse";
-          badge.innerText = "MENUNGGU PENGESAHAN";
-          btnReject.classList.remove('hidden');
-          btnToggle.className = "w-1/2 sm:w-auto px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm flex items-center justify-center gap-1";
-          btnToggle.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Sahkan';
-          
-          if (uploadedUrl) {
-            uploadWrapper.classList.remove('hidden');
-            uploadWrapper.innerHTML = `
-              <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2 text-left">
-                <span class="text-[11px] font-bold text-amber-900 block"><i class="fa-solid fa-file-image mr-1 text-amber-600"></i> Bukti Resit dari Penyewa:</span>
-                <a href="${uploadedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 underline hover:text-blue-800 py-1">
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Gambar/Resit Penyewa
-                </a>
-              </div>
-            `;
-          } else {
-            uploadWrapper.classList.remove('hidden');
-            uploadWrapper.innerHTML = `
-              <label class="block text-xs font-bold text-slate-700 mb-1">
-                <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Resit Pemilik (Pilihan):
-              </label>
-              <input type="file" id="owner-receipt-file" accept="image/*,.pdf" 
-                     class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white">
-            `;
-          }
-        } else {
-          badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800";
-          badge.innerText = "TERTUNGGAK";
-          btnReject.classList.add('hidden');
-          btnToggle.className = "w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1";
-          btnToggle.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Sahkan Bayaran';
-          
-          uploadWrapper.classList.remove('hidden');
-          uploadWrapper.innerHTML = `
-            <label class="block text-xs font-bold text-slate-700 mb-1">
-              <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Resit Pemilik (Pilihan):
-            </label>
-            <input type="file" id="owner-receipt-file" accept="image/*,.pdf" 
-                   class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white">
-            <p id="receipt-upload-hint" class="text-[10px] text-slate-400 italic mt-1">Boleh terus sahkan tanpa fail jika bayaran diterima tunai/manual.</p>
-          `;
-        }
-      } else {
-        activeModalTenant = null;
-        document.getElementById('form-namaPenyewa').value = '';
-        document.getElementById('form-telPenyewa').value = '';
-        document.getElementById('form-icPenyewa').value = '';
-        document.getElementById('form-tarikhMasuk').value = '';
-        quickPay.classList.add('hidden');
-        btnDelete.classList.add('hidden');
-      }
-
-      toggleTenantFields();
-      showModalDirect('modal-edit');
-    }
-
-    function confirmDeleteTenant() {
-      if (!activeModalTenant || !authenticatedPassword) return;
-      const roomId = document.getElementById('form-idBilik').value;
-      const tenantName = activeModalTenant.nama;
-
-      showConfirmModal(
-        'Padam Penyewa',
-        `Padamkan rekod "${tenantName}" dan kosongkan ${roomId}? Rekod ini akan dipadam secara kekal dari pangkalan data.`,
-        async () => {
-          const btnDelete = document.getElementById('btn-delete-tenant');
-          btnDelete.innerText = "Memadam...";
-          btnDelete.disabled = true;
-
-          try {
-            const res = await apiPost({ action: "padamPenyewa", idBilik: roomId, password: authenticatedPassword });
-            btnDelete.innerHTML = '<i class="fa-solid fa-user-xmark"></i> Padam Penyewa';
-            btnDelete.disabled = false;
-            showToast(res.message || "Penyewa berjaya dipadam!", 'success');
-            closeModalDirect('modal-edit');
-            loadOwnerData();
-          } catch (err) {
-            btnDelete.innerHTML = '<i class="fa-solid fa-user-xmark"></i> Padam Penyewa';
-            btnDelete.disabled = false;
-            showToast("Gagal memadam: " + err.message, 'error');
-          }
-        },
-        true
-      );
-    }
-
-    function processPaymentAction(actionType) {
-      if (!activeModalTenant || !authenticatedPassword) return;
-      const b = currentRooms.find(r => r.id === document.getElementById('form-idBilik').value);
-      const rawStatus = (b.bayaranSemasa && b.bayaranSemasa.status ? b.bayaranSemasa.status : 'Tertunggak').toString().trim().toLowerCase();
-      
-      const fileInput = document.getElementById('owner-receipt-file');
-      const file = fileInput ? fileInput.files[0] : null;
-      const selectedMonth = document.getElementById('select-bulan').value || currentSelectedMonth;
-
-      let newStatus = "Selesai";
-
-      if (actionType === "Tolak") {
-        newStatus = "Tolak";
-      } else {
-        const isCurrentlySelesai = (rawStatus === 'selesai' || rawStatus === 'lunas');
-        newStatus = isCurrentlySelesai ? "Tertunggak" : "Selesai";
-
-        if (newStatus === "Selesai" && rawStatus !== "menunggu pengesahan" && !file) {
-          showToast("Sila muat naik resit sebelum sahkan bayaran!", "warning");
-          if (fileInput) fileInput.focus();
-          return;
-        }
-      }
-
-      const btnToggle = document.getElementById('btn-toggle-pay');
-      const btnReject = document.getElementById('btn-reject-pay');
-      if (btnToggle) btnToggle.disabled = true;
-      if (btnReject) btnReject.disabled = true;
-
-      if (newStatus === "Selesai" && file) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          const base64Data = e.target.result.split(',')[1];
-          const payload = {
-            idPenyewa: activeModalTenant.id,
-            bulan: selectedMonth,
-            status: newStatus,
-            fileData: {
-              base64: base64Data,
-              mimeType: file.type,
-              filename: file.name
-            }
-          };
-
-          try {
-            await apiPost({ action: "updateStatusBayaranWithReceipt", payload: payload, password: authenticatedPassword });
-            if (btnToggle) btnToggle.disabled = false;
-            if (btnReject) btnReject.disabled = false;
-            showToast(`Bayaran ${selectedMonth} telah disahkan selesai!`, 'success');
-            closeModalDirect('modal-edit');
-            loadOwnerData();
-          } catch (err) {
-            if (btnToggle) btnToggle.disabled = false;
-            if (btnReject) btnReject.disabled = false;
-            showToast("Ralat: " + err.message, 'error');
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        const payload = {
-          idPenyewa: activeModalTenant.id,
-          bulan: selectedMonth,
-          status: newStatus,
-          fileData: null
-        };
-
-        (async () => {
-          try {
-            const res = await apiPost({ action: "updateStatusBayaranWithReceipt", payload: payload, password: authenticatedPassword });
-            if (btnToggle) btnToggle.disabled = false;
-            if (btnReject) btnReject.disabled = false;
-            
-            if (newStatus === "Tolak") {
-              showToast(`Bayaran ${selectedMonth} telah ditolak.`, 'info');
-              if (res && res.whatsappUrl) {
-                window.open(res.whatsappUrl, '_blank');
-              }
-            } else {
-              showToast(`Status ${selectedMonth} dikemas kini kepada ${newStatus}.`, 'info');
-            }
-
-            closeModalDirect('modal-edit');
-            loadOwnerData();
-          } catch (err) {
-            if (btnToggle) btnToggle.disabled = false;
-            if (btnReject) btnReject.disabled = false;
-            showToast("Ralat: " + err.message, 'error');
-          }
-        })();
-      }
-    }
-
-    function toggleTenantFields() {
-      const status = document.getElementById('form-status').value;
-      const section = document.getElementById('tenant-form-section');
-      if (status === 'Berpenghuni') {
-        section.classList.remove('hidden');
-        document.getElementById('form-namaPenyewa').required = true;
-      } else {
-        section.classList.add('hidden');
-        document.getElementById('form-namaPenyewa').required = false;
-      }
-    }
-
-    async function handleFormSubmit(e) {
-      e.preventDefault();
-      if (!authenticatedPassword) return;
-
-      const btn = document.getElementById('btn-save');
-      btn.innerText = "Menyimpan...";
-      btn.disabled = true;
-
-      const payload = {
-        idBilik: document.getElementById('form-idBilik').value,
-        jenisBilik: document.getElementById('form-jenis').value,
-        hargaSewa: document.getElementById('form-harga').value,
-        status: document.getElementById('form-status').value,
-        namaPenyewa: document.getElementById('form-namaPenyewa').value,
-        telPenyewa: document.getElementById('form-telPenyewa').value,
-        icPenyewa: document.getElementById('form-icPenyewa').value,
-        tarikhMasuk: document.getElementById('form-tarikhMasuk').value
-      };
-
-      try {
-        await apiPost({ action: "simpanDataBilik", payload: payload, password: authenticatedPassword });
-        btn.innerText = "Simpan";
-        btn.disabled = false;
-        showToast("Maklumat berjaya disimpan!", 'success');
-        closeModalDirect('modal-edit');
-        loadOwnerData();
-      } catch (err) {
-        btn.innerText = "Simpan";
-        btn.disabled = false;
-        showToast("Ralat: " + err.message, 'error');
-      }
-    }
-
-    window.onload = () => {
-      setupMonthDropdown();
-      loadPublicRooms();
-      updateSidebarUI();
+    // Kosongkan cache bila ada perubahan data
+    CacheService.getScriptCache().remove("public_rooms");
+  } catch (err) {
+    result = { success: false, message: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function safeStr(val) {
+  if (val === null || val === undefined) return "";
+  return val.toString().trim();
+}
+
+function pasangTriggerForm() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const triggers = ScriptApp.getUserTriggers(ss);
+  triggers.forEach(t => {
+    if (t.getHandlerFunction() === 'onFormSubmitTrigger') ScriptApp.deleteTrigger(t);
+  });
+
+  ScriptApp.newTrigger('onFormSubmitTrigger')
+    .forSpreadsheet(ss)
+    .onFormSubmit()
+    .create();
+
+  salinResponFormBaharu();
+  CacheService.getScriptCache().remove("public_rooms");
+  Logger.log("Trigger Google Form berjaya dipasang!");
+}
+
+function onFormSubmitTrigger(e) {
+  salinResponFormBaharu();
+  CacheService.getScriptCache().remove("public_rooms");
+}
+
+function formatBulanTeks(rawBulan) {
+  if (!rawBulan) return "September 2026";
+  if (rawBulan instanceof Date) {
+    const senarai = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+    return senarai[rawBulan.getMonth()] + " " + rawBulan.getFullYear();
+  }
+  return safeStr(rawBulan);
+}
+
+function getBulanTahunSemasa() {
+  const senarai = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+  const d = new Date();
+  return senarai[d.getMonth()] + " " + d.getFullYear();
+}
+
+function getOrCreateMonthFolder(bulanName) {
+  try {
+    const rootName = "MSRoomstay_Resit";
+    const subName = safeStr(bulanName) || "Lain-lain";
+
+    const rootFolders = DriveApp.getFoldersByName(rootName);
+    const rootFolder = rootFolders.hasNext() ? rootFolders.next() : DriveApp.createFolder(rootName);
+
+    const subFolders = rootFolder.getFoldersByName(subName);
+    const targetFolder = subFolders.hasNext() ? subFolders.next() : rootFolder.createFolder(subName);
+
+    targetFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return targetFolder;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 1. Get Public Rooms (Laju dengan Cache)
+function getPublicRoomsFast() {
+  const cache = CacheService.getScriptCache();
+  const cachedData = cache.get("public_rooms");
+  if (cachedData) return JSON.parse(cachedData);
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const bilikSheet = ss.getSheetByName("Bilik");
+  const penyewaSheet = ss.getSheetByName("Penyewa");
+
+  const bilikData = (bilikSheet && bilikSheet.getLastRow() > 1) 
+    ? bilikSheet.getRange(2, 1, bilikSheet.getLastRow() - 1, 5).getValues() : [];
+  const penyewaData = (penyewaSheet && penyewaSheet.getLastRow() > 1) 
+    ? penyewaSheet.getRange(2, 1, penyewaSheet.getLastRow() - 1, 6).getValues() : [];
+
+  const tenantMap = {};
+  penyewaData.forEach(r => {
+    const roomKey = safeStr(r[4]).toUpperCase();
+    if (roomKey && safeStr(r[1])) tenantMap[roomKey] = safeStr(r[1]);
+  });
+
+  const rooms = bilikData.filter(r => safeStr(r[0]) !== "").map(r => {
+    const roomId = safeStr(r[0]);
+    const tenantName = tenantMap[roomId.toUpperCase()] || "";
+    const isOccupied = (tenantName !== "" && safeStr(r[4]).toLowerCase() === "berpenghuni");
+    return {
+      id: roomId,
+      nama: safeStr(r[1]) || ("Bilik " + roomId),
+      status: isOccupied ? "Berpenghuni" : "Kosong",
+      namaPenyewa: isOccupied ? tenantName : ""
     };
-  </script>
-</body>
-</html>
+  });
+
+  cache.put("public_rooms", JSON.stringify(rooms), 600); // 10 Minit cache
+  return rooms;
+}
+
+// 2. Verify Tenant (Batch In-Memory Read)
+function verifyTenantAccessFast(roomId, icInput) {
+  if (!roomId || !icInput) return { success: false, message: "Sila masukkan No. IC." };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const penyewaSheet = ss.getSheetByName("Penyewa");
+  const bilikSheet = ss.getSheetByName("Bilik");
+  const bayaranSheet = ss.getSheetByName("Bayaran");
+
+  const targetRoom = safeStr(roomId).toUpperCase();
+  const cleanIC = safeStr(icInput).replace(/[^0-9]/g, '');
+
+  const penyewaData = (penyewaSheet && penyewaSheet.getLastRow() > 1) 
+    ? penyewaSheet.getRange(2, 1, penyewaSheet.getLastRow() - 1, 6).getValues() : [];
+  const matchedTenant = penyewaData.find(r => safeStr(r[4]).toUpperCase() === targetRoom);
+
+  if (!matchedTenant) return { success: false, message: "Bilik ini belum mempunyai penyewa berdaftar." };
+
+  const tenantIC = safeStr(matchedTenant[3]).replace(/[^0-9]/g, '');
+  if (tenantIC !== cleanIC) return { success: false, message: "No. IC tidak sepadan." };
+
+  const bilikData = (bilikSheet && bilikSheet.getLastRow() > 1) 
+    ? bilikSheet.getRange(2, 1, bilikSheet.getLastRow() - 1, 5).getValues() : [];
+  const matchedBilik = bilikData.find(b => safeStr(b[0]).toUpperCase() === targetRoom) || ["-", roomId, "-", 350];
+  const tenantId = safeStr(matchedTenant[0]).toUpperCase();
+  const roomPrice = Number(matchedBilik[3]) || 350;
+
+  const bayaranData = (bayaranSheet && bayaranSheet.getLastRow() > 1) 
+    ? bayaranSheet.getRange(2, 1, bayaranSheet.getLastRow() - 1, 7).getValues() : [];
+
+  const currentMonth = getBulanTahunSemasa();
+  let payments = bayaranData
+    .filter(p => safeStr(p[2]).toUpperCase() === tenantId && safeStr(p[0]) !== "")
+    .map(p => {
+      let tStr = p[1];
+      if (tStr instanceof Date) tStr = Utilities.formatDate(tStr, "GMT+8", "yyyy-MM-dd");
+      return {
+        id: safeStr(p[0]),
+        tarikh: safeStr(tStr) || "-",
+        bulan: formatBulanTeks(p[3]),
+        jumlah: Number(p[4]) || roomPrice,
+        status: safeStr(p[5]) || "Tertunggak",
+        resit: safeStr(p[6]) || "-"
+      };
+    });
+
+  let tMasuk = matchedTenant[5];
+  if (tMasuk instanceof Date) tMasuk = Utilities.formatDate(tMasuk, "GMT+8", "yyyy-MM-dd");
+
+  return {
+    success: true,
+    data: {
+      id: safeStr(matchedTenant[0]),
+      nama: safeStr(matchedTenant[1]),
+      tel: safeStr(matchedTenant[2]),
+      ic: safeStr(matchedTenant[3]),
+      bilikId: safeStr(matchedTenant[4]),
+      namaBilik: safeStr(matchedBilik[1]) || roomId,
+      kadarSewa: roomPrice,
+      tarikhMasuk: safeStr(tMasuk) || "-",
+      bayaran: payments
+    }
+  };
+}
+
+// 3. Owner Dashboard Data
+function getOwnerDashboardDataFast(selectedMonth, password) {
+  if (safeStr(password) !== OWNER_PASSWORD) throw new Error("Akses Ditolak.");
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const bilikSheet = ss.getSheetByName("Bilik");
+  const penyewaSheet = ss.getSheetByName("Penyewa");
+  const bayaranSheet = ss.getSheetByName("Bayaran");
+
+  const activeMonth = safeStr(selectedMonth) || getBulanTahunSemasa();
+
+  const bilikData = (bilikSheet && bilikSheet.getLastRow() > 1) 
+    ? bilikSheet.getRange(2, 1, bilikSheet.getLastRow() - 1, 5).getValues() : [];
+  const penyewaData = (penyewaSheet && penyewaSheet.getLastRow() > 1) 
+    ? penyewaSheet.getRange(2, 1, penyewaSheet.getLastRow() - 1, 6).getValues() : [];
+  const bayaranData = (bayaranSheet && bayaranSheet.getLastRow() > 1) 
+    ? bayaranSheet.getRange(2, 1, bayaranSheet.getLastRow() - 1, 7).getValues() : [];
+
+  const tenantMap = {};
+  penyewaData.forEach(r => {
+    if (safeStr(r[0])) {
+      let tMasuk = r[5];
+      if (tMasuk instanceof Date) tMasuk = Utilities.formatDate(tMasuk, "GMT+8", "yyyy-MM-dd");
+      tenantMap[safeStr(r[4]).toUpperCase()] = {
+        id: safeStr(r[0]),
+        nama: safeStr(r[1]),
+        tel: safeStr(r[2]),
+        ic: safeStr(r[3]),
+        bilikId: safeStr(r[4]),
+        tarikh: safeStr(tMasuk)
+      };
+    }
+  });
+
+  const paymentMap = {};
+  bayaranData.forEach(p => {
+    if (formatBulanTeks(p[3]).toUpperCase() === activeMonth.toUpperCase()) {
+      paymentMap[safeStr(p[2]).toUpperCase()] = {
+        idBayaran: safeStr(p[0]),
+        jumlah: Number(p[4]) || 0,
+        status: safeStr(p[5]) || "Tertunggak",
+        resit: safeStr(p[6]) || "-"
+      };
+    }
+  });
+
+  let kutipanBulanan = 0, jumlahTertunggak = 0, bilikTerisi = 0;
+
+  const bilikList = bilikData.filter(r => safeStr(r[0]) !== "").map(b => {
+    const roomId = safeStr(b[0]);
+    const tenant = tenantMap[roomId.toUpperCase()] || null;
+    const isOccupied = (tenant !== null && safeStr(b[4]).toLowerCase() === "berpenghuni");
+    if (isOccupied) bilikTerisi++;
+
+    let payInfo = null;
+    if (isOccupied && tenant) {
+      payInfo = paymentMap[tenant.id.toUpperCase()] || { idBayaran: "-", jumlah: Number(b[3]) || 350, status: "Tertunggak", resit: "-" };
+      const st = safeStr(payInfo.status).toLowerCase();
+      if (st === "selesai" || st === "lunas") kutipanBulanan += (payInfo.jumlah || Number(b[3]) || 0);
+      else jumlahTertunggak += (payInfo.jumlah || Number(b[3]) || 0);
+    }
+
+    return {
+      id: roomId,
+      nama: safeStr(b[1]) || ("Bilik " + roomId),
+      jenis: safeStr(b[2]) || "Standard Single",
+      harga: Number(b[3]) || 350,
+      status: isOccupied ? "Berpenghuni" : "Kosong",
+      penyewa: isOccupied ? tenant : null,
+      bayaranSemasa: isOccupied ? payInfo : null
+    };
+  });
+
+  return {
+    selectedMonth: activeMonth,
+    stats: {
+      totalBilik: bilikData.length || 11,
+      bilikTerisi: bilikTerisi,
+      bilikKosong: (bilikData.length || 11) - bilikTerisi,
+      kutipanBulanan: kutipanBulanan,
+      jumlahTertunggak: jumlahTertunggak
+    },
+    bilikList: bilikList
+  };
+}
+
+// 4. Update / Reject Payment
+function updateStatusBayaranWithReceiptFast(payload, password) {
+  if (safeStr(password) !== OWNER_PASSWORD) throw new Error("Akses Ditolak.");
+
+  const idPenyewa = safeStr(payload.idPenyewa);
+  const bulan = safeStr(payload.bulan);
+  const actionType = safeStr(payload.status);
+  const fileData = payload.fileData;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetBayaran = ss.getSheetByName("Bayaran");
+  const sheetPenyewa = ss.getSheetByName("Penyewa");
+  const sheetBilik = ss.getSheetByName("Bilik");
+  
+  const data = sheetBayaran.getDataRange().getValues();
+  const today = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+
+  const dataP = sheetPenyewa.getDataRange().getValues();
+  const matchedTenant = dataP.find(p => safeStr(p[0]).toUpperCase() === idPenyewa.toUpperCase());
+  const tenantName = matchedTenant ? safeStr(matchedTenant[1]).toUpperCase() : "PENYEWA";
+  const idBilik = matchedTenant ? safeStr(matchedTenant[4]).toUpperCase() : "BILIK";
+
+  let matchingRows = [], existingResit = "-";
+  for (let i = 1; i < data.length; i++) {
+    if (safeStr(data[i][2]).toUpperCase() === idPenyewa.toUpperCase() && formatBulanTeks(data[i][3]).toUpperCase() === bulan.toUpperCase()) {
+      matchingRows.push(i + 1);
+      if (data[i][6] && data[i][6] !== "-") existingResit = safeStr(data[i][6]);
+    }
+  }
+
+  let finalStatus = "Tertunggak", resitNo = "-", whatsappUrl = "";
+
+  if (actionType === "Selesai") {
+    finalStatus = "Selesai";
+    if (fileData && fileData.base64) {
+      const folder = getOrCreateMonthFolder(bulan);
+      if (folder) {
+        const fileExt = fileData.filename.includes(".") ? ("." + fileData.filename.split(".").pop()) : ".jpg";
+        const formattedFileName = `${idBilik}_${bulan}-${tenantName}${fileExt}`;
+        const blob = Utilities.newBlob(Utilities.base64Decode(fileData.base64), fileData.mimeType, formattedFileName);
+        const file = folder.createFile(blob);
+        resitNo = "REC-OWNER | " + file.getUrl();
+      }
+    } else if (existingResit && existingResit !== "-" && existingResit.includes("http")) {
+      resitNo = existingResit;
+    }
+  } else if (actionType === "Tolak") {
+    finalStatus = "Tertunggak";
+    resitNo = "-";
+
+    if (matchedTenant) {
+      let tenantPhone = safeStr(matchedTenant[2]).replace(/[^0-9]/g, '');
+      if (tenantPhone.startsWith("0")) tenantPhone = "6" + tenantPhone;
+      
+      const dataB = sheetBilik.getDataRange().getValues();
+      const matchedBilik = dataB.find(b => safeStr(b[0]).toUpperCase() === idBilik);
+      const roomName = matchedBilik ? safeStr(matchedBilik[1]) : idBilik;
+
+      if (tenantPhone) {
+        const waText = `Salam *${encodeURIComponent(tenantName)}* (${encodeURIComponent(roomName)}),%0A%0ABukti bayaran sewa anda bagi bulan *${encodeURIComponent(bulan)}* telah *DITOLAK* oleh pihak pengurusan MSRoomstay kerana resit tidak sah/kurang jelas.%0A%0ASila muat naik semula resit yang sah di Portal Penyewa. Terima kasih.`;
+        whatsappUrl = `https://wa.me/${tenantPhone}?text=${waText}`;
+      }
+    }
+  }
+
+  if (matchingRows.length > 0) {
+    const pRow = matchingRows[0];
+    sheetBayaran.getRange(pRow, 2).setValue(today);
+    sheetBayaran.getRange(pRow, 4).setValue(bulan);
+    sheetBayaran.getRange(pRow, 6).setValue(finalStatus);
+    sheetBayaran.getRange(pRow, 7).setValue(resitNo);
+
+    for (let j = matchingRows.length - 1; j >= 1; j--) sheetBayaran.deleteRow(matchingRows[j]);
+  } else {
+    const idPay = "PAY" + Utilities.formatDate(new Date(), "GMT+8", "yyMMddHHmmss");
+    sheetBayaran.appendRow([idPay, today, idPenyewa, bulan, 350, finalStatus, resitNo]);
+  }
+
+  SpreadsheetApp.flush();
+  return { success: true, whatsappUrl: whatsappUrl };
+}
+
+// 5. Submit Payment by Tenant
+function submitTenantPaymentFast(payload) {
+  const idPenyewa = safeStr(payload.idPenyewa);
+  const bulan = safeStr(payload.bulan);
+  const fileData = payload.fileData;
+
+  if (!idPenyewa || !bulan) return { success: false, message: "Maklumat tidak lengkap." };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetBayaran = ss.getSheetByName("Bayaran");
+  const sheetPenyewa = ss.getSheetByName("Penyewa");
+  const sheetBilik = ss.getSheetByName("Bilik");
+
+  const dataP = sheetPenyewa.getDataRange().getValues();
+  const matchedTenant = dataP.find(p => safeStr(p[0]).toUpperCase() === idPenyewa.toUpperCase());
+  const tenantName = matchedTenant ? safeStr(matchedTenant[1]).toUpperCase() : "PENYEWA";
+  const roomKey = matchedTenant ? safeStr(matchedTenant[4]).toUpperCase() : "BILIK";
+
+  const dataB = sheetBilik.getDataRange().getValues();
+  const matchedBilik = dataB.find(b => safeStr(b[0]).toUpperCase() === roomKey);
+  const roomName = matchedBilik ? safeStr(matchedBilik[1]) : roomKey;
+  const roomPrice = matchedBilik ? (Number(matchedBilik[3]) || 350) : 350;
+
+  let resitUrl = "-";
+  if (fileData && fileData.base64) {
+    const folder = getOrCreateMonthFolder(bulan);
+    if (folder) {
+      const fileExt = fileData.filename.includes(".") ? ("." + fileData.filename.split(".").pop()) : ".jpg";
+      const formattedFileName = `${roomKey}_${bulan}-${tenantName}${fileExt}`;
+      const blob = Utilities.newBlob(Utilities.base64Decode(fileData.base64), fileData.mimeType, formattedFileName);
+      const file = folder.createFile(blob);
+      resitUrl = file.getUrl();
+    }
+  }
+
+  const dataBayaran = sheetBayaran.getDataRange().getValues();
+  const today = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+
+  let rowFound = -1;
+  for (let i = 1; i < dataBayaran.length; i++) {
+    if (safeStr(dataBayaran[i][2]).toUpperCase() === idPenyewa.toUpperCase() && formatBulanTeks(dataBayaran[i][3]).toUpperCase() === bulan.toUpperCase()) {
+      rowFound = i + 1;
+      break;
+    }
+  }
+
+  const resitNo = (resitUrl !== "-") ? ("REC-BUKTI | " + resitUrl) : "-";
+  if (rowFound > 0) {
+    sheetBayaran.getRange(rowFound, 2).setValue(today);
+    sheetBayaran.getRange(rowFound, 6).setValue("Menunggu Pengesahan");
+    sheetBayaran.getRange(rowFound, 7).setValue(resitNo);
+  } else {
+    const idPay = "PAY" + Utilities.formatDate(new Date(), "GMT+8", "yyMMddHHmmss");
+    sheetBayaran.appendRow([idPay, today, idPenyewa, bulan, roomPrice, "Menunggu Pengesahan", resitNo]);
+  }
+
+  SpreadsheetApp.flush();
+
+  const cleanPhone = OWNER_WHATSAPP_NUMBER.replace(/[^0-9]/g, '');
+  const waText = `Salam Pemilik MSRoomstay,%0A%0ASaya *${encodeURIComponent(tenantName)}* (${encodeURIComponent(roomName)}) telah memuat naik resit bayaran sewa bagi *${encodeURIComponent(bulan)}* (Jumlah: *RM${roomPrice}*).%0A%0AMohon semak dan sahkan di Dashboard Pemilik. Terima kasih!`;
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${waText}`;
+
+  return { success: true, message: "Bukti bayaran berjaya dihantar!", whatsappUrl: whatsappUrl };
+}
+
+// 6. Save Room Info
+function simpanDataBilikFast(formData, password) {
+  if (safeStr(password) !== OWNER_PASSWORD) throw new Error("Akses Ditolak.");
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetBilik = ss.getSheetByName("Bilik");
+  const sheetPenyewa = ss.getSheetByName("Penyewa");
+
+  const idBilik = safeStr(formData.idBilik);
+  const statusBilik = safeStr(formData.status);
+
+  const dataBilik = sheetBilik.getDataRange().getValues();
+  for (let i = 1; i < dataBilik.length; i++) {
+    if (safeStr(dataBilik[i][0]).toUpperCase() === idBilik.toUpperCase()) {
+      sheetBilik.getRange(i + 1, 3).setValue(formData.jenisBilik);
+      sheetBilik.getRange(i + 1, 4).setValue(Number(formData.hargaSewa) || 350);
+      sheetBilik.getRange(i + 1, 5).setValue(statusBilik);
+      break;
+    }
+  }
+
+  const dataPenyewa = sheetPenyewa.getDataRange().getValues();
+  let existingRow = -1;
+  for (let j = 1; j < dataPenyewa.length; j++) {
+    if (safeStr(dataPenyewa[j][4]).toUpperCase() === idBilik.toUpperCase()) {
+      existingRow = j + 1;
+      break;
+    }
+  }
+
+  if (statusBilik === "Berpenghuni" && formData.namaPenyewa) {
+    if (existingRow > 0) {
+      sheetPenyewa.getRange(existingRow, 2).setValue(safeStr(formData.namaPenyewa).toUpperCase());
+      sheetPenyewa.getRange(existingRow, 3).setValue("'" + safeStr(formData.telPenyewa));
+      sheetPenyewa.getRange(existingRow, 4).setValue("'" + safeStr(formData.icPenyewa));
+      sheetPenyewa.getRange(existingRow, 6).setValue(safeStr(formData.tarikhMasuk));
+    } else {
+      const newId = "T" + Utilities.formatDate(new Date(), "GMT+8", "yyMMddHHmm");
+      sheetPenyewa.appendRow([newId, safeStr(formData.namaPenyewa).toUpperCase(), "'" + safeStr(formData.telPenyewa), "'" + safeStr(formData.icPenyewa), idBilik, safeStr(formData.tarikhMasuk)]);
+    }
+  } else if (statusBilik === "Kosong" && existingRow > 0) {
+    sheetPenyewa.deleteRow(existingRow);
+  }
+
+  SpreadsheetApp.flush();
+  return { success: true };
+}
+
+// 7. Delete Tenant
+function padamPenyewaFast(idBilik, password) {
+  if (safeStr(password) !== OWNER_PASSWORD) throw new Error("Akses Ditolak.");
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetBilik = ss.getSheetByName("Bilik");
+  const sheetPenyewa = ss.getSheetByName("Penyewa");
+  const sheetBayaran = ss.getSheetByName("Bayaran");
+
+  const targetRoom = safeStr(idBilik).toUpperCase();
+
+  const dataBilik = sheetBilik.getDataRange().getValues();
+  for (let i = 1; i < dataBilik.length; i++) {
+    if (safeStr(dataBilik[i][0]).toUpperCase() === targetRoom) {
+      sheetBilik.getRange(i + 1, 5).setValue("Kosong");
+      break;
+    }
+  }
+
+  let deletedTenantId = "";
+  const dataPenyewa = sheetPenyewa.getDataRange().getValues();
+  for (let j = dataPenyewa.length - 1; j >= 1; j--) {
+    if (safeStr(dataPenyewa[j][4]).toUpperCase() === targetRoom) {
+      deletedTenantId = safeStr(dataPenyewa[j][0]);
+      sheetPenyewa.deleteRow(j + 1);
+    }
+  }
+
+  if (deletedTenantId && sheetBayaran && sheetBayaran.getLastRow() > 1) {
+    const dataBayaran = sheetBayaran.getDataRange().getValues();
+    for (let k = dataBayaran.length - 1; k >= 1; k--) {
+      if (safeStr(dataBayaran[k][2]).toUpperCase() === deletedTenantId.toUpperCase()) {
+        sheetBayaran.deleteRow(k + 1);
+      }
+    }
+  }
+
+  SpreadsheetApp.flush();
+  return { success: true, message: `Penyewa bagi ${idBilik} telah dipadam sepenuhnya.` };
+}
+
+// Background Task Sync
+function salinResponFormBaharu() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return;
+
+    const allSheets = ss.getSheets();
+    let responseSheet = null;
+    for (let s of allSheets) {
+      const sName = s.getName().toLowerCase();
+      if (sName.includes("form responses") || sName.includes("tindak balas borang") || sName.includes("response")) {
+        responseSheet = s;
+        break;
+      }
+    }
+
+    if (!responseSheet || responseSheet.getLastRow() <= 1) return;
+
+    const sheetPenyewa = ss.getSheetByName("Penyewa");
+    const sheetBilik = ss.getSheetByName("Bilik");
+    const sheetBayaran = ss.getSheetByName("Bayaran");
+
+    const rawData = responseSheet.getDataRange().getValues();
+    const headers = rawData[0];
+    const totalCols = headers.length;
+
+    let colNama = -1, colIC = -1, colTel = -1, colBilik = -1, colSewa = -1, colTarikh = -1, colStatusSync = -1;
+
+    for (let c = 0; c < headers.length; c++) {
+      const h = safeStr(headers[c]).toLowerCase();
+      if (h.includes("nama") && colNama === -1) colNama = c;
+      else if ((h.includes("ic") || h.includes("kad pengenalan") || h.includes("kp")) && colIC === -1) colIC = c;
+      else if ((h.includes("telefon") || h.includes("whatsapp") || h.includes("tel")) && colTel === -1) colTel = c;
+      else if ((h.includes("bilik") || h.includes("unit")) && colBilik === -1) colBilik = c;
+      else if ((h.includes("sewa") || h.includes("harga")) && colSewa === -1) colSewa = c;
+      else if ((h.includes("tarikh") || h.includes("masuk")) && colTarikh === -1) colTarikh = c;
+      else if (h.includes("status_sync")) colStatusSync = c;
+    }
+
+    if (colStatusSync === -1) {
+      colStatusSync = totalCols;
+      responseSheet.getRange(1, colStatusSync + 1).setValue("STATUS_SYNC");
+    }
+
+    if (colNama === -1 || colBilik === -1) return;
+
+    for (let i = 1; i < rawData.length; i++) {
+      const row = rawData[i];
+      if (safeStr(row[colStatusSync]) === "PROCESSED") continue;
+
+      const nama = safeStr(row[colNama]).toUpperCase();
+      const rawBilik = safeStr(row[colBilik]);
+      const match = rawBilik.match(/B\d+/i);
+      const idBilik = match ? match[0].toUpperCase() : rawBilik.split("-")[0].trim().toUpperCase();
+
+      if (!nama || !idBilik) continue;
+
+      const ic = (colIC !== -1) ? safeStr(row[colIC]).replace(/[^0-9]/g, '') : "";
+      const tel = (colTel !== -1) ? safeStr(row[colTel]) : "";
+      let kadarSewa = (colSewa !== -1 && Number(safeStr(row[colSewa]).replace(/[^0-9.]/g, '')) > 0) 
+        ? Number(safeStr(row[colSewa]).replace(/[^0-9.]/g, '')) : 350;
+
+      let tarikhMasuk = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+      if (colTarikh !== -1 && row[colTarikh]) {
+        const rawDate = row[colTarikh];
+        tarikhMasuk = (rawDate instanceof Date) ? Utilities.formatDate(rawDate, "GMT+8", "yyyy-MM-dd") : safeStr(rawDate);
+      }
+
+      const dataP = sheetPenyewa.getDataRange().getValues();
+      let rowPenyewa = -1, tenantId = "";
+
+      for (let j = 1; j < dataP.length; j++) {
+        if (safeStr(dataP[j][4]).toUpperCase() === idBilik.toUpperCase()) {
+          rowPenyewa = j + 1;
+          tenantId = safeStr(dataP[j][0]);
+          break;
+        }
+      }
+
+      if (rowPenyewa > 0) {
+        sheetPenyewa.getRange(rowPenyewa, 2).setValue(nama);
+        if (tel) sheetPenyewa.getRange(rowPenyewa, 3).setValue("'" + tel);
+        if (ic) sheetPenyewa.getRange(rowPenyewa, 4).setValue("'" + ic);
+        sheetPenyewa.getRange(rowPenyewa, 6).setValue(tarikhMasuk);
+      } else {
+        tenantId = "T" + Utilities.formatDate(new Date(), "GMT+8", "yyMMddHHmm") + i;
+        sheetPenyewa.appendRow([tenantId, nama, "'" + tel, "'" + ic, idBilik, tarikhMasuk]);
+      }
+
+      const dataB = sheetBilik.getDataRange().getValues();
+      for (let k = 1; k < dataB.length; k++) {
+        if (safeStr(dataB[k][0]).toUpperCase() === idBilik.toUpperCase()) {
+          sheetBilik.getRange(k + 1, 4).setValue(kadarSewa);
+          sheetBilik.getRange(k + 1, 5).setValue("Berpenghuni");
+          break;
+        }
+      }
+
+      const currentMonth = getBulanTahunSemasa();
+      const dataBayaran = sheetBayaran.getDataRange().getValues();
+      let bayaranAda = false;
+
+      for (let m = 1; m < dataBayaran.length; m++) {
+        if (safeStr(dataBayaran[m][2]).toUpperCase() === tenantId.toUpperCase() && formatBulanTeks(dataBayaran[m][3]).toUpperCase() === currentMonth.toUpperCase()) {
+          bayaranAda = true;
+          break;
+        }
+      }
+
+      if (!bayaranAda && tenantId) {
+        const idBayaran = "PAY" + Utilities.formatDate(new Date(), "GMT+8", "yyMMddHHmmss") + i;
+        const today = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+        sheetBayaran.appendRow([idBayaran, today, tenantId, currentMonth, kadarSewa, "Tertunggak", "-"]);
+      }
+
+      responseSheet.getRange(i + 1, colStatusSync + 1).setValue("PROCESSED");
+    }
+    SpreadsheetApp.flush();
+  } catch (e) {
+    Logger.log("Ralat: " + e.message);
+  }
+}
