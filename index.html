@@ -13,12 +13,10 @@
   <meta name="apple-mobile-web-app-title" content="MSRoomstay">
   <meta name="application-name" content="MSRoomstay">
 
-  <!-- Ikon Favicon & Apple Touch Menggunakan Fail LogoMSRoomstay.png -->
+  <!-- Rujukan Fail Manifest & Ikon Fizikal -->
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="LogoMSRoomstay.png">
   <link rel="apple-touch-icon" href="LogoMSRoomstay.png">
-
-  <!-- Inline Web App Manifest untuk PWA (Merujuk LogoMSRoomstay.png) -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"MSRoomstay","short_name":"MSRoomstay","description":"Sistem Pengurusan Bilik Sewa MSRoomstay","start_url":".","display":"standalone","background_color":"#2fa4ff","theme_color":"#2fa4ff","icons":[{"src":"LogoMSRoomstay.png","sizes":"192x192 512x512","type":"image/png","purpose":"any maskable"}]}'>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -49,9 +47,9 @@
     .app-modal {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(15, 23, 42, 0.75) !important;
-      backdrop-filter: blur(6px) !important;
-      -webkit-backdrop-filter: blur(6px) !important;
+      background-color: rgba(15, 23, 42, 0.65) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
       z-index: 999999 !important;
       display: none;
       align-items: center !important;
@@ -60,17 +58,30 @@
       overflow-y: auto !important;
     }
 
+    /* Loading Screen Baharu: Putih & Biru Lembut */
     #global-loader {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(15, 23, 42, 0.8) !important;
-      backdrop-filter: blur(6px) !important;
-      -webkit-backdrop-filter: blur(6px) !important;
+      background-color: rgba(248, 250, 252, 0.85) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
       z-index: 99999999 !important;
       display: none;
       align-items: center !important;
       justify-content: center !important;
       flex-direction: column !important;
+    }
+
+    /* Gerbang Kunci PWA (Wajib Install) */
+    #pwa-gate-modal {
+      position: fixed !important;
+      inset: 0 !important;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+      z-index: 999999999 !important;
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 1.25rem !important;
     }
 
     @keyframes slideIn { from { transform: translateY(-16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -91,16 +102,51 @@
 </head>
 <body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-24 sm:pb-12 selection:bg-blue-600 selection:text-white">
 
-  <!-- Global Loading Screen Overlay -->
-  <div id="global-loader" class="text-white select-none">
-    <div class="bg-slate-900 border border-slate-700/80 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl max-w-xs mx-4 text-center">
+  <!-- GERBANG KUNCI WAJIB INSTALL PWA (PWA GATE LOCK) -->
+  <div id="pwa-gate-modal">
+    <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-blue-100 space-y-5">
+      <div class="w-20 h-20 mx-auto rounded-3xl p-2 bg-gradient-to-tr from-blue-500 to-sky-400 shadow-lg flex items-center justify-center">
+        <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-full h-full object-contain rounded-2xl bg-white p-1">
+      </div>
+      <div class="space-y-1.5">
+        <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Pasang Aplikasi MSRoomstay</h2>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Untuk keselamatan dan kemudahan semakan rekod sewa, sila pasang aplikasi rasmi ini ke telefon pintar anda sebelum meneruskan.
+        </p>
+      </div>
+
+      <div class="space-y-2.5 pt-1">
+        <!-- Butang Install Terus (Android Chrome / Desktop) -->
+        <button type="button" id="btn-gate-install" onclick="executePwaInstall()" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-download"></i> Pasang Sekarang (Install)
+        </button>
+
+        <!-- Panduan Manual iOS Safari -->
+        <div id="ios-instruction-box" class="hidden p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-left text-[11px] text-blue-900 space-y-1">
+          <p class="font-bold flex items-center gap-1.5 text-blue-800">
+            <i class="fa-brands fa-apple text-xs"></i> Pengguna iPhone / iPad (Safari):
+          </p>
+          <ol class="list-decimal list-inside space-y-0.5 text-slate-600 pl-1">
+            <li>Tekan butang <strong>Kongsi (Share / <i class="fa-solid fa-arrow-up-from-bracket"></i>)</strong> di bawah pelayar Safari.</li>
+            <li>Skrol ke bawah & pilih <strong>"Add to Home Screen"</strong>.</li>
+            <li>Buka ikon <strong>MSRoomstay</strong> dari skrin utama telefon anda.</li>
+          </ol>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-400 font-medium">MSRoomstay Secure Portal @ 2026</p>
+    </div>
+  </div>
+
+  <!-- Loading Screen Baharu (Tema Putih & Biru Bersih) -->
+  <div id="global-loader" class="text-slate-800 select-none">
+    <div class="bg-white/95 border border-slate-200/90 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-xl max-w-xs mx-4 text-center backdrop-blur-md">
       <div class="relative w-16 h-16 flex items-center justify-center">
-        <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-        <img src="LogoMSRoomstay.png" alt="MSRoomstay Logo" class="w-10 h-10 rounded-xl object-contain shadow absolute bg-white p-0.5">
+        <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+        <img src="LogoMSRoomstay.png" alt="MSRoomstay Logo" class="w-10 h-10 rounded-xl object-contain shadow-xs absolute bg-blue-50/70 p-1">
       </div>
       <div class="space-y-1">
-        <p id="loader-text" class="text-xs sm:text-sm font-bold text-slate-100">Memproses...</p>
-        <p class="text-[10px] text-slate-400">Sila tunggu sebentar.</p>
+        <p id="loader-text" class="text-xs sm:text-sm font-bold text-slate-800">Memproses...</p>
+        <p class="text-[10.5px] text-slate-400 font-medium">Sila tunggu sebentar.</p>
       </div>
     </div>
   </div>
@@ -113,7 +159,7 @@
     <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-14 sm:h-16">
         
-        <!-- Brand Logo Header Menggunakan LogoMSRoomstay.png -->
+        <!-- Brand Logo Header -->
         <div class="flex items-center space-x-2.5 cursor-pointer py-2" onclick="switchView('tenant')">
           <img src="LogoMSRoomstay.png" alt="Logo MSRoomstay" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-sm flex-shrink-0 bg-blue-50 p-0.5">
           <div class="flex items-baseline font-black tracking-tight text-lg sm:text-xl select-none">
@@ -137,13 +183,6 @@
           </button>
           <button type="button" onclick="requestOwnerAccess()" id="btn-owner-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
             <i class="fa-solid fa-lock mr-1.5 text-slate-400" id="icon-owner-desktop"></i> Dashboard Pemilik
-          </button>
-        </div>
-
-        <!-- PWA Install Button -->
-        <div class="flex items-center space-x-2">
-          <button type="button" id="btn-pwa-install" onclick="triggerPwaInstall()" class="hidden px-2.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 text-white shadow hover:bg-blue-700 transition flex items-center gap-1.5 active:scale-95">
-            <i class="fa-solid fa-download text-xs"></i> <span>Pasang Apps</span>
           </button>
         </div>
 
@@ -461,15 +500,13 @@
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
-                </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
+                <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -753,7 +790,6 @@
         <span class="text-xl sm:text-2xl font-black text-slate-900 block" id="pay-modal-amount">RM 0</span>
       </div>
 
-      <!-- Kad Butiran Bayaran Dalam Modal -->
       <div class="bg-blue-50/70 p-3 rounded-xl border border-blue-200 text-xs space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-bold uppercase text-blue-900"><i class="fa-solid fa-building-columns mr-1"></i> Bank Muamalat</span>
@@ -1075,44 +1111,56 @@
     let confirmCallback = null;
     let deferredPwaPrompt = null;
 
-    // PWA Install Prompt Listener
+    // PENGESAHAN APPS SUDAH DI-INSTALL (PWA GATE LOCK)
+    function checkPwaInstallState() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const gateModal = document.getElementById('pwa-gate-modal');
+      const iosBox = document.getElementById('ios-instruction-box');
+
+      // Jika dibuka di browser biasa (bukan installed PWA), kunci antaramuka sepenuhnya
+      if (!isStandalone) {
+        if (gateModal) gateModal.style.setProperty('display', 'flex', 'important');
+        
+        // Pengesanan peranti iOS Safari
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIos && iosBox) {
+          iosBox.classList.remove('hidden');
+          const btnGate = document.getElementById('btn-gate-install');
+          if (btnGate) btnGate.classList.add('hidden');
+        }
+      } else {
+        if (gateModal) gateModal.style.setProperty('display', 'none', 'important');
+      }
+    }
+
+    // PWA Install Event Listener
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPwaPrompt = e;
-      const btnPwa = document.getElementById('btn-pwa-install');
-      if (btnPwa) btnPwa.classList.remove('hidden');
+      const btnGate = document.getElementById('btn-gate-install');
+      if (btnGate) btnGate.classList.remove('hidden');
     });
 
-    function triggerPwaInstall() {
+    function executePwaInstall() {
       if (deferredPwaPrompt) {
         deferredPwaPrompt.prompt();
         deferredPwaPrompt.userChoice.then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            showToast('Pemasangan MSRoomstay berjaya!', 'success');
+            showToast('Pemasangan berjaya! Sila buka aplikasi dari skrin utama telefon.', 'success');
           }
           deferredPwaPrompt = null;
-          const btnPwa = document.getElementById('btn-pwa-install');
-          if (btnPwa) btnPwa.classList.add('hidden');
         });
       } else {
-        showToast('Untuk pasang: Tekan ikon menu pelayar (3 titik atau ikon Share) dan pilih "Add to Home Screen".', 'info');
+        showToast('Untuk telefon Android/iOS: Tekan menu pelayar (3 titik/Share) dan pilih "Add to Home Screen".', 'info');
       }
     }
 
-    // Auto-Register PWA Service Worker
+    // Pendaftaran Service Worker Rasmi
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        const swBlob = new Blob([`
-          const CACHE_NAME = 'msroomstay-pwa-v3';
-          self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
-          self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-          self.addEventListener('fetch', e => {
-            if (e.request.method === 'GET' && !e.request.url.includes('script.google.com')) {
-              e.respondWith(caches.open(CACHE_NAME).then(cache => cache.match(e.request).then(res => res || fetch(e.request).then(netRes => { cache.put(e.request, netRes.clone()); return netRes; }))));
-            }
-          });
-        `], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.log('SW registration skipped:', err);
+        });
       });
     }
 
@@ -1154,9 +1202,7 @@
 
     function showModalDirect(id) {
       const el = document.getElementById(id);
-      if (el) {
-        el.style.setProperty('display', 'flex', 'important');
-      }
+      if (el) el.style.setProperty('display', 'flex', 'important');
     }
 
     function closeModalDirect(id) {
@@ -1164,14 +1210,11 @@
         document.activeElement.blur();
       }
       const el = document.getElementById(id);
-      if (el) {
-        el.style.setProperty('display', 'none', 'important');
-      }
+      if (el) el.style.setProperty('display', 'none', 'important');
     }
 
     function updateSidebarUI() {
       const iconDesktop = document.getElementById('icon-owner-desktop');
-
       if (authenticatedPassword) {
         if (iconDesktop) iconDesktop.className = "fa-solid fa-lock-open mr-1.5 text-emerald-600";
       } else {
@@ -2164,6 +2207,7 @@
     }
 
     window.onload = () => {
+      checkPwaInstallState();
       setupMonthDropdown();
       loadPublicRooms();
       updateSidebarUI();
