@@ -1168,10 +1168,13 @@
       }
     }
 
-    // Auto Update Service Worker & Paksa Update Modal
+   // Auto Update Service Worker & Paksa Update Modal
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then((reg) => {
+          // Semak jika ada update semasa app dibuka
+          reg.update();
+
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
@@ -1183,8 +1186,17 @@
           });
         }).catch(() => {});
       });
-    }
 
+      // Jika ada controller baru mengambil alih
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+    
     async function apiGet(params) {
       const url = new URL(APPS_SCRIPT_API_URL);
       Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
