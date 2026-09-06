@@ -71,21 +71,6 @@
       flex-direction: column !important;
     }
 
-    /* Modal Update Wajib - Tidak Boleh Tutup Walau Tekan Ruang Kosong */
-    #update-gate-modal {
-      position: fixed !important;
-      inset: 0 !important;
-      background: rgba(15, 23, 42, 0.85) !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      z-index: 9999999999 !important;
-      display: none;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 1.25rem !important;
-      pointer-events: auto !important;
-    }
-
     #pwa-gate-modal {
       position: fixed !important;
       inset: 0 !important;
@@ -114,24 +99,6 @@
   </style>
 </head>
 <body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-24 sm:pb-12 selection:bg-blue-600 selection:text-white">
-
-  <!-- HARD UPDATE GATE LOCK (SEKAT AKSES SELAGI TAK UPDATE) -->
-  <div id="update-gate-modal">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-blue-100 space-y-4 pointer-events-auto">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl shadow-inner">
-        <i class="fa-solid fa-cloud-arrow-down animate-bounce"></i>
-      </div>
-      <div class="space-y-1">
-        <h2 class="text-base font-black text-slate-900">Versi Baharu Dikesan!</h2>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Sistem telah dikemaskini. Anda diwajibkan untuk mengemas kini aplikasi ini untuk mengakses data terkini.
-        </p>
-      </div>
-      <button type="button" onclick="forceAppUpdate()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-rotate"></i> Kemas Kini Sekarang
-      </button>
-    </div>
-  </div>
 
   <!-- GERBANG KUNCI WAJIB INSTALL PWA -->
   <div id="pwa-gate-modal">
@@ -1133,6 +1100,45 @@
     let confirmCallback = null;
     let deferredPwaPrompt = null;
 
+    // SISTEM PENGESAHAN VERSI AUTOMATIK (REAL-TIME HASH CHECKER)
+    const APP_BUILD_TIMESTAMP = "2026-09-06T17:00:00Z"; // <--- Cap masa deploy automatik
+
+    async function checkAppVersion() {
+      try {
+        const res = await fetch(window.location.href.split('?')[0] + '?t=' + Date.now(), { method: 'HEAD' });
+        const lastModified = res.headers.get('last-modified');
+        const localBuild = localStorage.getItem('msroomstay_build');
+
+        if (!localBuild) {
+          localStorage.setItem('msroomstay_build', lastModified || APP_BUILD_TIMESTAMP);
+        } else if (lastModified && localBuild !== lastModified) {
+          // Versi pelayan berbeza dengan peranti penyewa -> Paksa kunci sistem dan papar update gate
+          localStorage.setItem('msroomstay_build', lastModified);
+          const updateGate = document.getElementById('update-gate-modal');
+          if (updateGate) updateGate.style.setProperty('display', 'flex', 'important');
+        }
+      } catch (e) {
+        // Abaikan ralat rangkaian kecil
+      }
+    }
+
+    function forceAppUpdate() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for(let reg of registrations) reg.unregister();
+        });
+      }
+      // Kosongkan semua cache pelayar dan muat semula versi paling segar
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 300);
+    }
+
     function checkPwaInstallState() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const gateModal = document.getElementById('pwa-gate-modal');
@@ -1140,7 +1146,6 @@
 
       if (!isStandalone) {
         if (gateModal) gateModal.style.setProperty('display', 'flex', 'important');
-        
         const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIos && iosBox) {
           iosBox.classList.remove('hidden');
@@ -1164,58 +1169,22 @@
         deferredPwaPrompt.prompt();
         deferredPwaPrompt.userChoice.then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            showToast('Pemasangan berjaya! Sila buka aplikasi dari skrin utama telefon.', 'success');
+            showToast('Pemasangan berjaya! Sila buka aplikasi dari skrin utama.', 'success');
           }
           deferredPwaPrompt = null;
         });
       } else {
-        showToast('Untuk telefon Android/iOS: Tekan menu pelayar (3 titik/Share) dan pilih "Add to Home Screen".', 'info');
+        showToast('Tekan menu pelayar (3 titik/Share) dan pilih "Add to Home Screen".', 'info');
       }
     }
 
-    // Auto-Update Service Worker Checker (Auto Versioning)
+    // Unregister Service Worker supaya app sentiasa ambil fail langsung dari GitHub tanpa cache
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then((reg) => {
-          // Semak kemas kini setiap kali app dibuka
-          reg.update();
-
-          setInterval(() => {
-            reg.update();
-          }, 1000 * 60 * 5); // Semak setiap 5 minit
-
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                const updateModal = document.getElementById('update-gate-modal');
-                if (updateModal) updateModal.style.setProperty('display', 'flex', 'important');
-              }
-            });
-          });
-        }).catch(() => {});
-      });
-
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
-    }
-
-    function forceAppUpdate() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for(let registration of registrations) {
-            registration.unregister();
-          }
-          window.location.reload(true);
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for(let reg of registrations) reg.unregister();
         });
-      } else {
-        window.location.reload(true);
-      }
+      });
     }
 
     async function apiGet(params) {
@@ -1697,7 +1666,7 @@
       } catch (err) {
         hideLoading();
         btn.disabled = false;
-        document.getElementById('pass-error').classList.remove('hidden');
+        document.getElementById('pass-error').classList.add('hidden');
         showToast('Ralat pengesahan kata laluan.', 'error');
       }
     }
@@ -2261,6 +2230,7 @@
 
     window.onload = () => {
       checkPwaInstallState();
+      checkAppVersion();
       setupMonthDropdown();
       loadPublicRooms();
       updateSidebarUI();
