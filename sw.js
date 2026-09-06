@@ -1,8 +1,7 @@
-// Service Worker Automatik Mengesan Perubahan Fail
-const CACHE_NAME = 'msroomstay-auto-v' + new Date().getTime(); // Dinamik mengikut waktu build/deploy
+const CACHE_NAME = 'msroomstay-v2'; // <--- Tukar nombor ni (v2, v3, v4...) setiap kali anda nak paksa penyewa update!
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Paksa service worker baharu aktif serta-merta
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -10,8 +9,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          // Padam cache lama secara automatik
-          return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       );
     })
