@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>MSRoomstay</title>
 
-  <!-- PWA & Mobile Meta Tags (Status Bar Putih Bersih) -->
+  <!-- PWA & Mobile Meta Tags -->
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="mobile-web-app-capable" content="yes">
@@ -13,7 +13,6 @@
   <meta name="apple-mobile-web-app-title" content="MSRoomstay">
   <meta name="application-name" content="MSRoomstay">
 
-  <!-- Rujukan Fail Manifest & Ikon Fizikal -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="LogoMSRoomstay.png">
   <link rel="apple-touch-icon" href="LogoMSRoomstay.png">
@@ -72,6 +71,21 @@
       flex-direction: column !important;
     }
 
+    /* Modal Update Wajib - Tidak Boleh Tutup Walau Tekan Ruang Kosong */
+    #update-gate-modal {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(15, 23, 42, 0.85) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      z-index: 9999999999 !important;
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 1.25rem !important;
+      pointer-events: auto !important;
+    }
+
     #pwa-gate-modal {
       position: fixed !important;
       inset: 0 !important;
@@ -101,25 +115,25 @@
 </head>
 <body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-24 sm:pb-12 selection:bg-blue-600 selection:text-white">
 
-  <!-- BANNER / MODAL PAKSA UPDATE (AUTO-UPDATE GATE) -->
-  <div id="update-gate-modal" style="display:none;" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[999999999] flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-blue-100 space-y-4">
+  <!-- HARD UPDATE GATE LOCK (SEKAT AKSES SELAGI TAK UPDATE) -->
+  <div id="update-gate-modal">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-blue-100 space-y-4 pointer-events-auto">
       <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl shadow-inner">
         <i class="fa-solid fa-cloud-arrow-down animate-bounce"></i>
       </div>
       <div class="space-y-1">
-        <h2 class="text-base font-black text-slate-900">Kemas Kini Baharu Dikesan!</h2>
+        <h2 class="text-base font-black text-slate-900">Versi Baharu Dikesan!</h2>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Pihak pengurusan telah mengeluarkan versi sistem terkini. Sila kemas kini aplikasi untuk meneruskan akses.
+          Sistem telah dikemaskini. Anda diwajibkan untuk mengemas kini aplikasi ini untuk mengakses data terkini.
         </p>
       </div>
-      <button type="button" onclick="window.location.reload(true)" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+      <button type="button" onclick="forceAppUpdate()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
         <i class="fa-solid fa-rotate"></i> Kemas Kini Sekarang
       </button>
     </div>
   </div>
 
-  <!-- GERBANG KUNCI WAJIB INSTALL PWA (PWA GATE LOCK) -->
+  <!-- GERBANG KUNCI WAJIB INSTALL PWA -->
   <div id="pwa-gate-modal">
     <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-blue-100 space-y-5">
       <div class="w-20 h-20 mx-auto rounded-3xl p-2 bg-gradient-to-tr from-blue-500 to-sky-400 shadow-lg flex items-center justify-center">
@@ -128,23 +142,20 @@
       <div class="space-y-1.5">
         <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Pasang Aplikasi MSRoomstay</h2>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Untuk keselamatan dan kemudahan semakan rekod sewa, sila pasang aplikasi rasmi ini ke telefon pintar anda sebelum meneruskan.
+          Sila pasang aplikasi rasmi ini ke telefon pintar anda untuk meneruskan akses.
         </p>
       </div>
-
       <div class="space-y-2.5 pt-1">
-        <button type="button" id="btn-gate-install" onclick="executePwaInstall()" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition active:scale-95">
+        <button type="button" id="btn-gate-install" onclick="executePwaInstall()" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-sky-600 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2">
           <i class="fa-solid fa-download"></i> Pasang Sekarang (Install)
         </button>
-
         <div id="ios-instruction-box" class="hidden p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-left text-[11px] text-blue-900 space-y-1">
           <p class="font-bold flex items-center gap-1.5 text-blue-800">
             <i class="fa-brands fa-apple text-xs"></i> Pengguna iPhone / iPad (Safari):
           </p>
           <ol class="list-decimal list-inside space-y-0.5 text-slate-600 pl-1">
-            <li>Tekan butang <strong>Kongsi (Share / <i class="fa-solid fa-arrow-up-from-bracket"></i>)</strong> di bawah pelayar Safari.</li>
-            <li>Skrol ke bawah & pilih <strong>"Add to Home Screen"</strong>.</li>
-            <li>Buka ikon <strong>MSRoomstay</strong> dari skrin utama telefon anda.</li>
+            <li>Tekan butang <strong>Kongsi (Share / <i class="fa-solid fa-arrow-up-from-bracket"></i>)</strong>.</li>
+            <li>Pilih <strong>"Add to Home Screen"</strong>.</li>
           </ol>
         </div>
       </div>
@@ -152,12 +163,12 @@
     </div>
   </div>
 
-  <!-- Loading Screen Putih & Biru Lembut -->
+  <!-- Loading Screen -->
   <div id="global-loader" class="text-slate-800 select-none">
     <div class="bg-white/95 border border-slate-200/90 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-xl max-w-xs mx-4 text-center backdrop-blur-md">
       <div class="relative w-16 h-16 flex items-center justify-center">
         <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-        <img src="LogoMSRoomstay.png" alt="MSRoomstay Logo" class="w-10 h-10 rounded-xl object-contain shadow-xs absolute bg-blue-50/70 p-1">
+        <img src="LogoMSRoomstay.png" alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-xs absolute bg-blue-50/70 p-1">
       </div>
       <div class="space-y-1">
         <p id="loader-text" class="text-xs sm:text-sm font-bold text-slate-800">Memproses...</p>
@@ -166,15 +177,12 @@
     </div>
   </div>
 
-  <!-- Toast Container -->
   <div id="toast-container" class="fixed top-3 left-3 right-3 sm:left-auto sm:right-4 z-[9999999] flex flex-col space-y-2 pointer-events-none max-w-sm ml-auto"></div>
 
   <!-- Top Navigation Header -->
   <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 no-print shadow-xs">
     <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-14 sm:h-16">
-        
-        <!-- Brand Logo Header -->
         <div class="flex items-center space-x-2.5 cursor-pointer py-2" onclick="switchView('tenant')">
           <img src="LogoMSRoomstay.png" alt="Logo MSRoomstay" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-sm flex-shrink-0 bg-blue-50 p-0.5">
           <div class="flex items-baseline font-black tracking-tight text-lg sm:text-xl select-none">
@@ -182,7 +190,6 @@
           </div>
         </div>
         
-        <!-- Desktop Nav -->
         <div class="hidden sm:flex items-center space-x-1.5">
           <button type="button" onclick="switchView('tenant')" id="btn-tenant-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition">
             <i class="fa-solid fa-user-circle mr-1.5"></i> Portal Penyewa
@@ -200,7 +207,6 @@
             <i class="fa-solid fa-lock mr-1.5 text-slate-400" id="icon-owner-desktop"></i> Dashboard Pemilik
           </button>
         </div>
-
       </div>
     </div>
   </nav>
@@ -278,7 +284,6 @@
         <div id="inbox-items-container" class="space-y-2.5"></div>
       </div>
 
-      <!-- Kad Google Form Pendaftaran -->
       <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3.5 sm:p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center space-x-3 text-left w-full sm:w-auto">
           <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white text-lg flex-shrink-0">
@@ -1168,12 +1173,16 @@
       }
     }
 
-   // Auto Update Service Worker & Paksa Update Modal
+    // Auto-Update Service Worker Checker (Auto Versioning)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then((reg) => {
-          // Semak jika ada update semasa app dibuka
+          // Semak kemas kini setiap kali app dibuka
           reg.update();
+
+          setInterval(() => {
+            reg.update();
+          }, 1000 * 60 * 5); // Semak setiap 5 minit
 
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
@@ -1187,7 +1196,6 @@
         }).catch(() => {});
       });
 
-      // Jika ada controller baru mengambil alih
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
@@ -1196,7 +1204,20 @@
         }
       });
     }
-    
+
+    function forceAppUpdate() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+          window.location.reload(true);
+        });
+      } else {
+        window.location.reload(true);
+      }
+    }
+
     async function apiGet(params) {
       const url = new URL(APPS_SCRIPT_API_URL);
       Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
