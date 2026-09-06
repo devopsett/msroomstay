@@ -1,4 +1,4 @@
-const CACHE_NAME = 'msroomstay-v2'; // <--- Tukar nombor ni (v2, v3, v4...) setiap kali anda nak paksa penyewa update!
+const CACHE_NAME = 'msroomstay-v3'; // <--- Tukar nombor ni (v2, v3, v4...) setiap kali anda nak paksa penyewa update!
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
