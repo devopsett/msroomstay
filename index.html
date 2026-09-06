@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>MSRoomstay</title>
 
-  <!-- PWA & Mobile Meta Tags -->
-  <meta name="theme-color" content="#2fa4ff">
+  <!-- PWA & Mobile Meta Tags (Status Bar Ditukar Kepada Putih) -->
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="MSRoomstay">
   <meta name="application-name" content="MSRoomstay">
 
@@ -47,9 +47,9 @@
     .app-modal {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(15, 23, 42, 0.65) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
+      background-color: rgba(15, 23, 42, 0.75) !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
       z-index: 999999 !important;
       display: none;
       align-items: center !important;
@@ -58,7 +58,6 @@
       overflow-y: auto !important;
     }
 
-    /* Loading Screen Baharu: Putih & Biru Lembut */
     #global-loader {
       position: fixed !important;
       inset: 0 !important;
@@ -72,7 +71,6 @@
       flex-direction: column !important;
     }
 
-    /* Gerbang Kunci PWA (Wajib Install) */
     #pwa-gate-modal {
       position: fixed !important;
       inset: 0 !important;
@@ -116,12 +114,10 @@
       </div>
 
       <div class="space-y-2.5 pt-1">
-        <!-- Butang Install Terus (Android Chrome / Desktop) -->
         <button type="button" id="btn-gate-install" onclick="executePwaInstall()" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition active:scale-95">
           <i class="fa-solid fa-download"></i> Pasang Sekarang (Install)
         </button>
 
-        <!-- Panduan Manual iOS Safari -->
         <div id="ios-instruction-box" class="hidden p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-left text-[11px] text-blue-900 space-y-1">
           <p class="font-bold flex items-center gap-1.5 text-blue-800">
             <i class="fa-brands fa-apple text-xs"></i> Pengguna iPhone / iPad (Safari):
@@ -137,7 +133,7 @@
     </div>
   </div>
 
-  <!-- Loading Screen Baharu (Tema Putih & Biru Bersih) -->
+  <!-- Loading Screen Putih & Biru Lembut -->
   <div id="global-loader" class="text-slate-800 select-none">
     <div class="bg-white/95 border border-slate-200/90 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-xl max-w-xs mx-4 text-center backdrop-blur-md">
       <div class="relative w-16 h-16 flex items-center justify-center">
@@ -500,13 +496,15 @@
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                <i class="fa-solid fa-key"></i>
-              </div>
-              <div>
-                <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
+                  <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
+                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
+                </div>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -903,7 +901,7 @@
           </label>
           <input type="file" id="owner-receipt-file" accept="image/*,.pdf" 
                  class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white">
-          <p id="receipt-upload-hint" class="text-[10px] text-slate-400 italic mt-1">Format: JPG, PNG, PDF (Boleh terus sahkan tanpa muat naik jika bayaran tunai)</p>
+          <p id="receipt-upload-hint" class="text-[10px] text-slate-400 italic mt-1">Boleh terus sahkan tanpa fail jika bayaran diterima tunai/manual.</p>
         </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
@@ -1111,17 +1109,14 @@
     let confirmCallback = null;
     let deferredPwaPrompt = null;
 
-    // PENGESAHAN APPS SUDAH DI-INSTALL (PWA GATE LOCK)
     function checkPwaInstallState() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const gateModal = document.getElementById('pwa-gate-modal');
       const iosBox = document.getElementById('ios-instruction-box');
 
-      // Jika dibuka di browser biasa (bukan installed PWA), kunci antaramuka sepenuhnya
       if (!isStandalone) {
         if (gateModal) gateModal.style.setProperty('display', 'flex', 'important');
         
-        // Pengesanan peranti iOS Safari
         const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIos && iosBox) {
           iosBox.classList.remove('hidden');
@@ -1133,7 +1128,6 @@
       }
     }
 
-    // PWA Install Event Listener
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPwaPrompt = e;
@@ -1155,12 +1149,9 @@
       }
     }
 
-    // Pendaftaran Service Worker Rasmi
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-          console.log('SW registration skipped:', err);
-        });
+        navigator.serviceWorker.register('sw.js').catch(() => {});
       });
     }
 
@@ -1678,7 +1669,6 @@
       if (viewTerms) viewTerms.style.display = 'none';
       if (viewGuide) viewGuide.style.display = 'none';
 
-      // Kemas kini Bottom Nav
       const bnavItems = ['tenant', 'wifi', 'guide', 'terms', 'owner'];
       bnavItems.forEach(b => {
         const el = document.getElementById('bnav-' + b);
@@ -1779,7 +1769,7 @@
           }
         }
 
-        card.className = `p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
+        card.className = `p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
         card.onclick = () => openModal(b.id);
 
         card.innerHTML = `
