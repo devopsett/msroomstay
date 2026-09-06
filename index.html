@@ -58,17 +58,19 @@
       overflow-y: auto !important;
     }
 
+    /* Loading Screen Auto-Show dari awal untuk elak glitch */
     #global-loader {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(248, 250, 252, 0.85) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
+      background-color: rgba(248, 250, 252, 0.95) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
       z-index: 99999999 !important;
-      display: none;
+      display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       flex-direction: column !important;
+      transition: opacity 0.3s ease;
     }
 
     #pwa-gate-modal {
@@ -130,15 +132,15 @@
     </div>
   </div>
 
-  <!-- Loading Screen -->
+  <!-- Loading Screen (Sentiasa Aktif Semasa Init untuk Elak Glitch) -->
   <div id="global-loader" class="text-slate-800 select-none">
-    <div class="bg-white/95 border border-slate-200/90 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-xl max-w-xs mx-4 text-center backdrop-blur-md">
+    <div class="bg-white border border-slate-200 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl max-w-xs mx-4 text-center">
       <div class="relative w-16 h-16 flex items-center justify-center">
         <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
         <img src="LogoMSRoomstay.png" alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-xs absolute bg-blue-50/70 p-1">
       </div>
       <div class="space-y-1">
-        <p id="loader-text" class="text-xs sm:text-sm font-bold text-slate-800">Memproses...</p>
+        <p id="loader-text" class="text-xs sm:text-sm font-bold text-slate-800">Memuatkan Sistem...</p>
         <p class="text-[10.5px] text-slate-400 font-medium">Sila tunggu sebentar.</p>
       </div>
     </div>
@@ -802,7 +804,7 @@
             <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Bukti/Resit: <span class="text-rose-500 text-[10px]">*Wajib</span>
           </label>
           <input type="file" id="pay-tenant-file" accept="image/*,.pdf" required
-                 class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl p-1 bg-white focus:outline-none">
+                 class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white focus:outline-none">
           <p class="text-[9.5px] text-slate-400 mt-1 italic">Format: Gambar (JPG, PNG) atau PDF</p>
         </div>
 
@@ -1100,45 +1102,6 @@
     let confirmCallback = null;
     let deferredPwaPrompt = null;
 
-    // SISTEM PENGESAHAN VERSI AUTOMATIK (REAL-TIME HASH CHECKER)
-    const APP_BUILD_TIMESTAMP = "2026-09-06T17:00:00Z"; // <--- Cap masa deploy automatik
-
-    async function checkAppVersion() {
-      try {
-        const res = await fetch(window.location.href.split('?')[0] + '?t=' + Date.now(), { method: 'HEAD' });
-        const lastModified = res.headers.get('last-modified');
-        const localBuild = localStorage.getItem('msroomstay_build');
-
-        if (!localBuild) {
-          localStorage.setItem('msroomstay_build', lastModified || APP_BUILD_TIMESTAMP);
-        } else if (lastModified && localBuild !== lastModified) {
-          // Versi pelayan berbeza dengan peranti penyewa -> Paksa kunci sistem dan papar update gate
-          localStorage.setItem('msroomstay_build', lastModified);
-          const updateGate = document.getElementById('update-gate-modal');
-          if (updateGate) updateGate.style.setProperty('display', 'flex', 'important');
-        }
-      } catch (e) {
-        // Abaikan ralat rangkaian kecil
-      }
-    }
-
-    function forceAppUpdate() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for(let reg of registrations) reg.unregister();
-        });
-      }
-      // Kosongkan semua cache pelayar dan muat semula versi paling segar
-      if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach(name => caches.delete(name));
-        });
-      }
-      setTimeout(() => {
-        window.location.reload(true);
-      }, 300);
-    }
-
     function checkPwaInstallState() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const gateModal = document.getElementById('pwa-gate-modal');
@@ -1176,15 +1139,6 @@
       } else {
         showToast('Tekan menu pelayar (3 titik/Share) dan pilih "Add to Home Screen".', 'info');
       }
-    }
-
-    // Unregister Service Worker supaya app sentiasa ambil fail langsung dari GitHub tanpa cache
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for(let reg of registrations) reg.unregister();
-        });
-      });
     }
 
     async function apiGet(params) {
@@ -2230,7 +2184,6 @@
 
     window.onload = () => {
       checkPwaInstallState();
-      checkAppVersion();
       setupMonthDropdown();
       loadPublicRooms();
       updateSidebarUI();
