@@ -3,9 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>MSRoomstay - Sistem Pengurusan Bilik Sewa</title>
+  <title>MSRoomstay</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#2fa4ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MSRoomstay">
+  <meta name="application-name" content="MSRoomstay">
+
+  <!-- Logo MSRoomstay SVG Data-URI Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'%3E%3Crect width='500' height='500' rx='100' fill='%232fa4ff'/%3E%3Crect x='160' y='165' width='95' height='150' rx='10' fill='%23004ca8'/%3E%3Cpath d='M208 115 H282 V265 H208 Z' fill='none' stroke='white' stroke-width='14' stroke-linejoin='round'/%3E%3Cpath d='M85 310 H130 V245 L210 195 L278 238' fill='none' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M278 190 L350 235 V310 H415' fill='none' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'%3E%3Crect width='500' height='500' rx='100' fill='%232fa4ff'/%3E%3Crect x='160' y='165' width='95' height='150' rx='10' fill='%23004ca8'/%3E%3Cpath d='M208 115 H282 V265 H208 Z' fill='none' stroke='white' stroke-width='14' stroke-linejoin='round'/%3E%3Cpath d='M85 310 H130 V245 L210 195 L278 238' fill='none' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M278 190 L350 235 V310 H415' fill='none' stroke='white' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- Inline Web App Manifest untuk PWA Install -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22MSRoomstay%22%2C%22short_name%22%3A%22MSRoomstay%22%2C%22description%22%3A%22Sistem%20Pengurusan%20Bilik%20Sewa%20MSRoomstay%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%232fa4ff%22%2C%22theme_color%22%3A%22%232fa4ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20500%20500%27%253E%253Crect%20width%3D%27500%27%20height%3D%27500%27%20rx%3D%27100%27%20fill%3D%27%25232fa4ff%27%2F%253E%253Crect%20x%3D%27160%27%20y%3D%27165%27%20width%3D%2795%27%20height%3D%27150%27%20rx%3D%2710%27%20fill%3D%27%2523004ca8%27%2F%253E%253Cpath%20d%3D%27M208%20115%20H282%20V265%20H208%20Z%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%2714%27%20stroke-linejoin%3D%27round%27%2F%253E%253Cpath%20d%3D%27M85%20310%20H130%20V245%20L210%20195%20L278%20238%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%2714%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%2F%253E%253Cpath%20d%3D%27M278%20190%20L350%20235%20V310%20H415%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%2714%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
   <style>
     .ms-logo-text {
       color: #ffffff;
@@ -20,21 +37,21 @@
       -webkit-tap-highlight-color: transparent;
       width: 100%;
       min-height: 100%;
+      user-select: none;
     }
-    input, select, textarea { font-size: 16px !important; }
+    input, select, textarea { font-size: 16px !important; user-select: auto; }
     @media (min-width: 640px) {
       body { font-size: 15px; }
       input, select, textarea { font-size: 14px !important; }
       .ms-logo-text { -webkit-text-stroke: 1.5px #004ca8; }
     }
 
-    /* Modal Overlay Kebal */
     .app-modal {
       position: fixed !important;
       inset: 0 !important;
       background-color: rgba(15, 23, 42, 0.75) !important;
-      backdrop-filter: blur(4px) !important;
-      -webkit-backdrop-filter: blur(4px) !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
       z-index: 999999 !important;
       display: none;
       align-items: center !important;
@@ -43,13 +60,12 @@
       overflow-y: auto !important;
     }
 
-    /* Global Loader */
     #global-loader {
       position: fixed !important;
       inset: 0 !important;
       background-color: rgba(15, 23, 42, 0.8) !important;
-      backdrop-filter: blur(5px) !important;
-      -webkit-backdrop-filter: blur(5px) !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
       z-index: 99999999 !important;
       display: none;
       align-items: center !important;
@@ -73,17 +89,20 @@
     }
   </style>
 </head>
-<body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-12 selection:bg-blue-600 selection:text-white">
+<body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20 sm:pb-12 selection:bg-blue-600 selection:text-white">
 
   <!-- Global Loading Screen Overlay -->
   <div id="global-loader" class="text-white select-none">
     <div class="bg-slate-900 border border-slate-700/80 p-6 rounded-3xl flex flex-col items-center space-y-4 shadow-2xl max-w-xs mx-4 text-center">
-      <div class="relative w-14 h-14 flex items-center justify-center">
-        <div class="w-14 h-14 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-        <div class="w-8 h-8 rounded-lg bg-[#2fa4ff] flex items-center justify-center p-1 shadow-sm absolute">
-          <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-            <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
+      <div class="relative w-16 h-16 flex items-center justify-center">
+        <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+        <div class="w-10 h-10 rounded-xl bg-[#2fa4ff] flex items-center justify-center p-1.5 shadow absolute">
+          <!-- Logo Vektor Asli MSRoomstay -->
+          <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+            <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+            <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
       </div>
@@ -97,17 +116,19 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-3 left-3 right-3 sm:left-auto sm:right-4 z-[9999999] flex flex-col space-y-2 pointer-events-none max-w-sm ml-auto"></div>
 
-  <!-- Top Navigation -->
+  <!-- Top Navigation Header -->
   <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 no-print shadow-xs">
     <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-14 sm:h-16">
+        
+        <!-- Brand Logo Header -->
         <div class="flex items-center space-x-2.5 cursor-pointer py-2" onclick="switchView('tenant')">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#2fa4ff] flex items-center justify-center p-1.5 shadow-sm">
-            <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-              <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-              <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#2fa4ff] flex items-center justify-center p-1.5 shadow-sm overflow-hidden flex-shrink-0">
+            <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+              <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+              <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div class="flex items-baseline font-black tracking-tight text-lg sm:text-xl select-none">
@@ -134,15 +155,43 @@
           </button>
         </div>
 
-        <!-- Mobile Hamburger Button -->
-        <div class="sm:hidden flex items-center">
-          <button type="button" onclick="toggleSidebar(true)" aria-label="Buka Menu" class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95">
-            <i class="fa-solid fa-bars text-lg"></i>
+        <!-- PWA Install Button & Mobile Drawer Menu -->
+        <div class="flex items-center space-x-1.5">
+          <button type="button" id="btn-pwa-install" onclick="triggerPwaInstall()" class="hidden px-2.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 text-white shadow hover:bg-blue-700 transition flex items-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-download text-xs"></i> <span class="hidden sm:inline">Pasang</span> Apps
+          </button>
+          <button type="button" onclick="toggleSidebar(true)" aria-label="Buka Menu" class="sm:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition active:scale-95">
+            <i class="fa-solid fa-bars text-base"></i>
           </button>
         </div>
+
       </div>
     </div>
   </nav>
+
+  <!-- Mobile Bottom App Bar (Native App Feel) -->
+  <div class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 flex justify-around items-center h-16 px-1 no-print shadow-lg">
+    <button type="button" onclick="switchView('tenant')" id="bnav-tenant" class="flex flex-col items-center justify-center w-full py-1 text-blue-600 font-bold">
+      <i class="fa-solid fa-house-chimney text-base"></i>
+      <span class="text-[10px] mt-1">Bilik</span>
+    </button>
+    <button type="button" onclick="switchView('wifi')" id="bnav-wifi" class="flex flex-col items-center justify-center w-full py-1 text-slate-500 font-medium">
+      <i class="fa-solid fa-wifi text-base"></i>
+      <span class="text-[10px] mt-1">WiFi</span>
+    </button>
+    <button type="button" onclick="switchView('guide')" id="bnav-guide" class="flex flex-col items-center justify-center w-full py-1 text-slate-500 font-medium">
+      <i class="fa-solid fa-book-open text-base"></i>
+      <span class="text-[10px] mt-1">Panduan</span>
+    </button>
+    <button type="button" onclick="switchView('terms')" id="bnav-terms" class="flex flex-col items-center justify-center w-full py-1 text-slate-500 font-medium">
+      <i class="fa-solid fa-file-contract text-base"></i>
+      <span class="text-[10px] mt-1">Terma</span>
+    </button>
+    <button type="button" onclick="requestOwnerAccess()" id="bnav-owner" class="flex flex-col items-center justify-center w-full py-1 text-slate-500 font-medium">
+      <i class="fa-solid fa-lock text-base"></i>
+      <span class="text-[10px] mt-1">Pemilik</span>
+    </button>
+  </div>
 
   <!-- Mobile Sidebar Drawer & Overlay -->
   <div id="sidebar-overlay" onclick="toggleSidebar(false)" style="display:none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 sm:hidden"></div>
@@ -152,11 +201,11 @@
       <div class="p-4 border-b border-slate-100 flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div class="w-8 h-8 rounded-lg bg-[#2fa4ff] flex items-center justify-center p-1 shadow-sm">
-            <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-              <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-              <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+              <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+              <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div class="flex items-baseline font-black tracking-tight text-base">
@@ -209,19 +258,19 @@
           <i class="fa-solid fa-right-from-bracket"></i> Kunci Sesi Pemilik
         </button>
       </div>
-      <p class="text-[10px] text-slate-400 text-center font-medium">MSRoomstay @ 2026</p>
+      <p class="text-[10px] text-slate-400 text-center font-medium">MSRoomstay App @ 2026</p>
     </div>
   </div>
 
   <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 no-print">
+  <main class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 no-print">
     
     <!-- 1. DASHBOARD PEMILIK -->
     <div id="view-owner" style="display:none;" class="space-y-3.5 sm:space-y-5">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <div class="flex items-center justify-between sm:justify-start">
           <div class="flex items-center space-x-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
             <span class="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Pemilik Sah</span>
           </div>
           <button type="button" onclick="logoutOwner()" class="sm:hidden px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 rounded-lg border border-rose-200 active:bg-rose-100">
@@ -244,8 +293,8 @@
       </div>
 
       <!-- INBOX NOTIFIKASI BAYARAN PENYEWA -->
-      <div id="inbox-section" style="display:none;" class="bg-amber-50/80 border border-amber-300/80 rounded-2xl p-4 shadow-sm space-y-3">
-        <div class="flex items-center justify-between border-b border-amber-200/80 pb-2">
+      <div id="inbox-section" style="display:none;" class="bg-amber-50/90 border border-amber-300 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-amber-200 pb-2">
           <div class="flex items-center space-x-2">
             <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs animate-pulse">
               <i class="fa-solid fa-bell"></i>
@@ -262,7 +311,7 @@
         <div id="inbox-items-container" class="space-y-2.5"></div>
       </div>
 
-      <!-- Kad Google Form -->
+      <!-- Kad Google Form Pendaftaran -->
       <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3.5 sm:p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center space-x-3 text-left w-full sm:w-auto">
           <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white text-lg flex-shrink-0">
@@ -284,19 +333,19 @@
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-slate-400">Bilik Terisi</span>
           <div class="text-base sm:text-xl font-bold text-slate-900 mt-0.5"><span id="stat-terisi">-</span> / <span id="stat-total">11</span></div>
         </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-amber-600">Bilik Kosong</span>
           <div class="text-base sm:text-xl font-bold text-amber-600 mt-0.5" id="stat-kosong">-</div>
         </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-emerald-600">Kutipan Selesai</span>
           <div class="text-base sm:text-xl font-bold text-emerald-600 mt-0.5" id="stat-kutipan">RM 0</div>
         </div>
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-sm">
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-rose-600">Tunggakan</span>
           <div class="text-base sm:text-xl font-bold text-rose-600 mt-0.5" id="stat-tunggakan">RM 0</div>
         </div>
@@ -350,7 +399,7 @@
             </h1>
             <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih bilik anda untuk semak bayaran & resit.</p>
           </div>
-          <button type="button" onclick="loadPublicRooms(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex-shrink-0 active:bg-slate-300">
+          <button type="button" onclick="loadPublicRooms(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex-shrink-0 active:bg-slate-300">
             <i class="fa-solid fa-rotate mr-1"></i> Refresh
           </button>
         </div>
@@ -396,7 +445,7 @@
           </div>
         </div>
 
-        <!-- KAD MAKLUMAT AKAUN BAYARAN RASMI (BANK MUAMALAT / DUITNOW QR) -->
+        <!-- KAD MAKLUMAT AKAUN BAYARAN RASMI DENGAN DUITNOW QR ASLI -->
         <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-blue-700/50 space-y-3">
           <div class="flex items-center justify-between border-b border-blue-700/60 pb-2.5">
             <div class="flex items-center space-x-2">
@@ -499,15 +548,13 @@
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
-                </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
+                <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
               </div>
             </div>
             <div class="space-y-2.5 text-xs">
@@ -791,6 +838,7 @@
         <span class="text-xl sm:text-2xl font-black text-slate-900 block" id="pay-modal-amount">RM 0</span>
       </div>
 
+      <!-- Kad Ringkas Butiran Pembayaran Dalam Modal -->
       <div class="bg-blue-50/70 p-3 rounded-xl border border-blue-200 text-xs space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-bold uppercase text-blue-900"><i class="fa-solid fa-building-columns mr-1"></i> Bank Muamalat</span>
@@ -833,11 +881,11 @@
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl space-y-3.5 border border-slate-100 mx-auto my-auto">
       <div class="text-center space-y-1">
         <div class="w-12 h-12 rounded-2xl bg-[#2fa4ff] flex items-center justify-center mx-auto p-2 mb-1.5 shadow-sm">
-          <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-            <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-            <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+            <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+            <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <h3 class="text-sm sm:text-base font-bold text-slate-900" id="auth-modal-room-name">Bilik -</h3>
@@ -865,11 +913,11 @@
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl space-y-3.5 border border-slate-100 mx-auto my-auto">
       <div class="text-center space-y-1">
         <div class="w-12 h-12 rounded-2xl bg-[#2fa4ff] flex items-center justify-center mx-auto p-2 mb-1.5 shadow-sm">
-          <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-            <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-            <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+            <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+            <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <h3 class="text-sm sm:text-base font-bold text-slate-900">Akses Pemilik</h3>
@@ -1018,11 +1066,11 @@
       <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3">
         <div class="flex items-center space-x-2.5">
           <div class="w-11 h-11 rounded-xl bg-[#2fa4ff] flex items-center justify-center p-1.5 shadow-sm" style="background-color: #2fa4ff !important;">
-            <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="25" y="32" width="30" height="48" rx="2" fill="#004ca8"/>
-              <rect x="40" y="16" width="22" height="56" rx="2" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-              <path d="M10 62L25 62L25 41L45 27L58 36" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M56 42L78 52L78 70L90 70" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="160" y="165" width="95" height="150" rx="8" fill="#004ca8"/>
+              <rect x="208" y="115" width="74" height="150" fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+              <path d="M85 310 H130 V245 L210 195 L278 238" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M278 190 L350 235 V310 H415" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div>
@@ -1131,6 +1179,48 @@
     let currentTenantPayments = [];
     let authenticatedPassword = null;
     let confirmCallback = null;
+    let deferredPwaPrompt = null;
+
+    // PWA Install Prompt Listener
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const btnPwa = document.getElementById('btn-pwa-install');
+      if (btnPwa) btnPwa.classList.remove('hidden');
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showToast('Pemasangan MSRoomstay berjaya!', 'success');
+          }
+          deferredPwaPrompt = null;
+          const btnPwa = document.getElementById('btn-pwa-install');
+          if (btnPwa) btnPwa.classList.add('hidden');
+        });
+      } else {
+        showToast('Untuk install: Tekan menu pelayar (3 titik/ikon share) dan pilih "Add to Home Screen".', 'info');
+      }
+    }
+
+    // Auto-Register PWA Service Worker Inline
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swBlob = new Blob([`
+          const CACHE_NAME = 'msroomstay-pwa-v1';
+          self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
+          self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+          self.addEventListener('fetch', e => {
+            if (e.request.method === 'GET' && !e.request.url.includes('script.google.com')) {
+              e.respondWith(caches.open(CACHE_NAME).then(cache => cache.match(e.request).then(res => res || fetch(e.request).then(netRes => { cache.put(e.request, netRes.clone()); return netRes; }))));
+            }
+          });
+        `], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      });
+    }
 
     // Helper API Call (CORS-friendly)
     async function apiGet(params) {
@@ -1170,7 +1260,7 @@
       copyToClipboard(GOOGLE_FORM_URL, "Pautan Google Form");
     }
 
-    // Modal Handlers Kebal (Gunakan Property Style Terus)
+    // Modal Handlers Kebal
     function showModalDirect(id) {
       const el = document.getElementById(id);
       if (el) {
@@ -1368,7 +1458,7 @@
         const isOccupied = (b.status === 'Berpenghuni' || (b.namaPenyewa && b.namaPenyewa !== ''));
         const card = document.createElement('div');
         
-        card.className = `p-3.5 sm:p-4 rounded-xl border transition-all ${
+        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all ${
           !isOccupied 
             ? 'bg-slate-50/70 border-slate-200 cursor-pointer hover:border-slate-400' 
             : 'bg-white border-slate-200 hover:border-blue-500 hover:shadow-md cursor-pointer active:scale-95'
@@ -1681,6 +1771,19 @@
       if (viewTerms) viewTerms.style.display = 'none';
       if (viewGuide) viewGuide.style.display = 'none';
 
+      // Kemas kini Bottom Nav
+      const bnavItems = ['tenant', 'wifi', 'guide', 'terms', 'owner'];
+      bnavItems.forEach(b => {
+        const el = document.getElementById('bnav-' + b);
+        if (el) {
+          el.className = "flex flex-col items-center justify-center w-full py-1 text-slate-400 font-medium";
+        }
+      });
+      const currentBnav = document.getElementById('bnav-' + view);
+      if (currentBnav) {
+        currentBnav.className = "flex flex-col items-center justify-center w-full py-1 text-blue-600 font-bold";
+      }
+
       [btnOwnerDesk, btnTenantDesk, btnWifiDesk, btnTermsDesk, btnGuideDesk].forEach(btn => {
         if (btn) btn.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition";
       });
@@ -1787,7 +1890,7 @@
           }
         }
 
-        card.className = `p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
+        card.className = `p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
         card.onclick = () => openModal(b.id);
 
         card.innerHTML = `
