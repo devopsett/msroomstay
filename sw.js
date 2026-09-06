@@ -1,18 +1,8 @@
-const CACHE_NAME = 'msroomstay-pwa-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './LogoMSRoomstay.png'
-];
+// Service Worker Automatik Mengesan Perubahan Fail
+const CACHE_NAME = 'msroomstay-auto-v' + new Date().getTime(); // Dinamik mengikut waktu build/deploy
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
+  self.skipWaiting(); // Paksa service worker baharu aktif serta-merta
 });
 
 self.addEventListener('activate', (event) => {
@@ -20,9 +10,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
+          // Padam cache lama secara automatik
+          return caches.delete(key);
         })
       );
     })
@@ -31,12 +20,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Hanya simpan fail statik tempatan, langkau panggilan API Google Script
   if (event.request.method === 'GET' && !event.request.url.includes('script.google.com')) {
     event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request);
-      })
+      fetch(event.request)
+        .then((networkResponse) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
     );
   }
 });
