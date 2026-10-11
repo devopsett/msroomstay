@@ -1437,49 +1437,56 @@
       const tbody = document.getElementById('t-bayaran-table');
       tbody.innerHTML = '';
 
-      if (!currentTenantPayments || currentTenantPayments.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td class="px-3 py-3 font-medium text-slate-800 text-xs">Bulan Semasa (${currentSelectedMonth})</td>
-            <td class="px-3 py-3 text-slate-600 text-xs">RM ${t.kadarSewa || 350}</td>
-            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span></td>
-            <td class="px-3 py-3 text-right">
-              <button type="button" onclick="openPayTenantModal('${currentSelectedMonth}', ${t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm">
-                <i class="fa-solid fa-credit-card"></i> Bayar
-              </button>
-            </td>
-          </tr>
-        `;
-      } else {
-        currentTenantPayments.forEach((p, idx) => {
-          const st = (p.status || '').toString().trim().toLowerCase();
-          const isSelesai = (st === 'selesai' || st === 'lunas');
-          const isPending = (st === 'menunggu pengesahan');
+      // Dapatkan bulan semasa mengikut kalendar peranti
+      const senaraiBulanMelayu = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+      const dNow = new Date();
+      const currentMonthStr = senaraiBulanMelayu[dNow.getMonth()] + " " + dNow.getFullYear();
 
-          let badgeHtml = '';
-          let actionBtn = '';
+      // Periksa sama ada bulan semasa sudah wujud dalam senarai bayaran
+      const hasCurrentMonth = currentTenantPayments.some(p => 
+        (p.bulan || '').toLowerCase().replace(/\s+/g, '') === currentMonthStr.toLowerCase().replace(/\s+/g, '')
+      );
 
-          if (isSelesai) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>`;
-            actionBtn = `<button type="button" onclick="viewReceipt(${idx})" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition inline-flex items-center gap-1 active:scale-95"><i class="fa-solid fa-file-invoice"></i> Resit</button>`;
-          } else if (isPending) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">Menunggu Pengesahan</span>`;
-            actionBtn = `<span class="text-slate-400 text-xs italic">Sedang Disemak</span>`;
-          } else {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span>`;
-            actionBtn = `<button type="button" onclick="openPayTenantModal('${p.bulan}', ${p.jumlah || t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm"><i class="fa-solid fa-credit-card"></i> Bayar</button>`;
-          }
-
-          tbody.innerHTML += `
-            <tr>
-              <td class="px-3 py-3 font-medium text-slate-800 text-xs">${p.bulan || '-'}</td>
-              <td class="px-3 py-3 text-slate-600 text-xs">RM ${p.jumlah || t.kadarSewa || 350}</td>
-              <td class="px-3 py-3">${badgeHtml}</td>
-              <td class="px-3 py-3 text-right">${actionBtn}</td>
-            </tr>
-          `;
+      // Jika bulan semasa belum ada dalam database, masukkan baris bulan semasa secara dinamik
+      if (!hasCurrentMonth) {
+        currentTenantPayments.unshift({
+          id: "TEMP_CURR",
+          tarikh: "-",
+          bulan: currentMonthStr,
+          jumlah: t.kadarSewa || 350,
+          status: "Tertunggak",
+          resit: "-"
         });
       }
+
+      currentTenantPayments.forEach((p, idx) => {
+        const st = (p.status || '').toString().trim().toLowerCase();
+        const isSelesai = (st === 'selesai' || st === 'lunas');
+        const isPending = (st === 'menunggu pengesahan');
+
+        let badgeHtml = '';
+        let actionBtn = '';
+
+        if (isSelesai) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>`;
+          actionBtn = `<button type="button" onclick="viewReceipt(${idx})" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition inline-flex items-center gap-1 active:scale-95"><i class="fa-solid fa-file-invoice"></i> Resit</button>`;
+        } else if (isPending) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">Menunggu Pengesahan</span>`;
+          actionBtn = `<span class="text-slate-400 text-xs italic">Sedang Disemak</span>`;
+        } else {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span>`;
+          actionBtn = `<button type="button" onclick="openPayTenantModal('${p.bulan}', ${p.jumlah || t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm"><i class="fa-solid fa-credit-card"></i> Bayar</button>`;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td class="px-3 py-3 font-medium text-slate-800 text-xs">${p.bulan || '-'}</td>
+            <td class="px-3 py-3 text-slate-600 text-xs">RM ${p.jumlah || t.kadarSewa || 350}</td>
+            <td class="px-3 py-3">${badgeHtml}</td>
+            <td class="px-3 py-3 text-right">${actionBtn}</td>
+          </tr>
+        `;
+      });
     }
 
     function closeTenantDetails() {
