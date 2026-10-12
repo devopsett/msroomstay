@@ -1844,13 +1844,14 @@
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth();
 
-      // Bulan mula sewa: ambil dari Tarikh Masuk penyewa (DD-MM-YYYY / yyyy-MM-dd / DDMMYYYY),
-      // fallback kepada September 2026 jika tiada.
+      // Bulan mula penyata = max(Tarikh Masuk penyewa, September 2026).
+      // Rekod sistem bermula September 2026; penyewa yang mula sebelum itu tetap
+      // bermula September 2026, dan yang mula selepas itu bermula bulan mereka.
       let curY = 2026;
       let curM = 8; // September 2026
 
       const masuk = parseDateParts(t.tarikhMasuk);
-      if (masuk) {
+      if (masuk && (masuk.year > 2026 || (masuk.year === 2026 && masuk.month > 8))) {
         curY = masuk.year;
         curM = masuk.month;
       }
@@ -2199,6 +2200,9 @@
           } else {
             statusText = 'Tertunggak'; statusColor = '#e11d48'; borderColor = '#fecdd3';
           }
+        } else if (!isKosong && b.penyewa) {
+          // Berpenghuni tetapi belum mula sewa pada bulan ini — status neutral.
+          statusText = 'Belum Mula'; statusColor = '#94a3b8'; borderColor = 'var(--line)';
         }
 
         card.className = `p-3.5 rounded-xl transition-all cursor-pointer hover:shadow-md active:scale-[.98]`;
