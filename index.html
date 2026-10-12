@@ -381,12 +381,7 @@
 
       <!-- Grid Bilik -->
       <div class="surface p-4 sm:p-5">
-        <div class="flex items-center justify-between gap-3 mb-3">
-          <h2 class="section-title text-sm">Senarai Bilik</h2>
-          <button type="button" onclick="confirmSelarasRekodBayaran()" title="Selaraskan rekod bayaran bermula dari bulan mula sewa setiap penyewa" class="btn btn-ghost px-3 py-1.5 text-[11px]">
-            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Selaras Rekod Bayaran
-          </button>
-        </div>
+        <h2 class="section-title text-sm mb-3">Senarai Bilik</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="grid-bilik-owner"></div>
       </div>
 
@@ -2555,19 +2550,15 @@
         btnDelete.classList.remove('hidden');
 
         document.getElementById('modal-active-month').innerText = currentSelectedMonth;
-        
-        const rawStatus = (b.bayaranSemasa && b.bayaranSemasa.status ? b.bayaranSemasa.status : 'Tertunggak').toString().trim();
-        const stLower = rawStatus.toLowerCase();
-        
-        const isSelesai = (stLower === 'selesai' || stLower === 'lunas');
-        const isPending = (stLower === 'menunggu pengesahan');
 
         const badge = document.getElementById('modal-pay-badge');
         const btnToggle = document.getElementById('btn-toggle-pay');
         const btnReject = document.getElementById('btn-reject-pay');
 
-        document.getElementById('modal-pay-amount').innerText = 'RM ' + b.harga;
-        
+        // Jumlah dipaparkan: utamakan amaun rekod bulan ini, fallback harga bilik.
+        const amaunSemasa = (b.bayaranSemasa && b.bayaranSemasa.jumlah) ? b.bayaranSemasa.jumlah : b.harga;
+        document.getElementById('modal-pay-amount').innerText = 'RM ' + amaunSemasa;
+
         const resitStr = (b.bayaranSemasa && b.bayaranSemasa.resit ? b.bayaranSemasa.resit : '').toString();
         let uploadedUrl = '';
         if (resitStr.includes('http')) {
@@ -2575,7 +2566,19 @@
           else uploadedUrl = resitStr.trim();
         }
 
-        if (isSelesai) {
+        const belumMula = !b.bayaranSemasa && b.penyewa;
+        const stLower = (b.bayaranSemasa && b.bayaranSemasa.status ? b.bayaranSemasa.status : '').toString().trim().toLowerCase();
+        const isSelesai = (stLower === 'selesai' || stLower === 'lunas');
+        const isPending = (stLower === 'menunggu pengesahan');
+
+        if (belumMula) {
+          // Bulan dipilih sebelum penyewa mula sewa — tiada status bayaran.
+          badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600";
+          badge.innerText = "BELUM MULA";
+          btnReject.classList.add('hidden');
+          btnToggle.classList.add('hidden');
+          uploadWrapper.classList.add('hidden');
+        } else if (isSelesai) {
           badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800";
           badge.innerText = "SELESAI";
           btnReject.classList.add('hidden');
@@ -2639,28 +2642,6 @@
       toggleTenantFields();
       renderRoomHistory(b.id);
       showModalDirect('modal-edit');
-    }
-
-    function confirmSelarasRekodBayaran() {
-      if (!authenticatedPassword) return;
-
-      showConfirmModal(
-        'Selaras Rekod Bayaran',
-        'Selaraskan rekod bayaran SEMUA penyewa supaya bermula dari bulan mula sewa masing-masing? Rekod yang sudah "Selesai" atau ada resit TIDAK akan dipadam.',
-        async () => {
-          showLoading("Menyelaraskan rekod bayaran...");
-          try {
-            const res = await apiPost({ action: "kemaskiniRekodBayaranSemuaPenyewa", password: authenticatedPassword });
-            hideLoading();
-            showToast((res && res.message) || 'Rekod bayaran telah diselaraskan.', 'success');
-            loadOwnerData();
-          } catch (err) {
-            hideLoading();
-            showToast("Ralat: " + err.message, 'error');
-          }
-        },
-        false
-      );
     }
 
     function confirmDeleteTenant() {
