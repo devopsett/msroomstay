@@ -11,15 +11,15 @@
   "icons": [
     {
       "src": "LogoMSRoomstay.png",
-      "sizes": "192x192",
+      "sizes": "1080x1080",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "LogoMSRoomstay.png",
-      "sizes": "512x512",
+      "sizes": "1080x1080",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
