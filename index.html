@@ -1549,6 +1549,25 @@
       return '';
     }
 
+    // Baca tarikh dan pulangkan { year, month } (month 0-based) dari pelbagai format.
+    function parseDateParts(val) {
+      if (!val) return null;
+      const s = val.toString().trim();
+      let d = null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        d = new Date(Number(s.substring(0, 4)), Number(s.substring(5, 7)) - 1, Number(s.substring(8, 10)));
+      } else if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
+        d = new Date(Number(s.substring(6, 10)), Number(s.substring(3, 5)) - 1, Number(s.substring(0, 2)));
+      } else if (/^\d{8}$/.test(s)) {
+        d = new Date(Number(s.substring(4, 8)), Number(s.substring(2, 4)) - 1, Number(s.substring(0, 2)));
+      } else {
+        const parsed = new Date(s);
+        if (!isNaN(parsed.getTime())) d = parsed;
+      }
+      if (!d || isNaN(d.getTime())) return null;
+      return { year: d.getFullYear(), month: d.getMonth() };
+    }
+
     function openMoreMenu() {
       showModalDirect('modal-more');
     }
@@ -1820,10 +1839,19 @@
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth();
 
+      // Bulan mula sewa: ambil dari Tarikh Masuk penyewa (DD-MM-YYYY / yyyy-MM-dd / DDMMYYYY),
+      // fallback kepada September 2026 jika tiada.
       let curY = 2026;
       let curM = 8; // September 2026
 
+      const masuk = parseDateParts(t.tarikhMasuk);
+      if (masuk) {
+        curY = masuk.year;
+        curM = masuk.month;
+      }
+
       const senaraiKitaranWajib = [];
+      // Jana hanya jika bulan mula tidak melebihi bulan semasa.
       while (curY < currentYear || (curY === currentYear && curM <= currentMonth)) {
         senaraiKitaranWajib.push(SENARAI_BULAN_MELAYU[curM] + " " + curY);
         curM++;
