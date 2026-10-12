@@ -363,21 +363,18 @@
         </div>
       </div>
 
-      <!-- Google Form -->
+      <!-- Borang Pendaftaran Penyewa -->
       <div class="surface p-4 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <i class="fa-solid fa-file-signature text-lg flex-shrink-0" style="color: var(--brand);"></i>
           <div class="min-w-0">
-            <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">Borang Pendaftaran Penyewa</h4>
-            <p class="text-[11px] text-slate-500 hidden sm:block">Pautan borang untuk bakal penyewa baharu.</p>
+            <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">Pendaftaran Penyewa</h4>
+            <p class="text-[11px] text-slate-500 hidden sm:block">Daftarkan penyewa baharu terus ke dalam sistem.</p>
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button type="button" onclick="copyGoogleFormLink()" title="Salin pautan" class="btn btn-ghost w-9 h-9 rounded-lg">
-            <i class="fa-regular fa-copy text-xs"></i>
-          </button>
-          <button type="button" onclick="openGoogleFormLink()" class="btn btn-primary px-3.5 py-2 text-xs">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka
+          <button type="button" onclick="openDaftarModal()" class="btn btn-primary px-3.5 py-2 text-xs">
+            <i class="fa-solid fa-user-plus"></i> Daftar Penyewa
           </button>
         </div>
       </div>
@@ -430,9 +427,14 @@
             <h1 class="text-base sm:text-lg font-extrabold text-slate-900">Senarai Bilik</h1>
             <p class="text-xs text-slate-500 mt-0.5">Pilih bilik anda untuk semak bayaran & resit.</p>
           </div>
-          <button type="button" onclick="loadPublicRooms(true)" title="Muat Semula" class="btn btn-ghost w-9 h-9 rounded-lg flex-shrink-0">
-            <i class="fa-solid fa-rotate text-xs"></i>
-          </button>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button type="button" onclick="openDaftarModal()" class="btn btn-primary px-3.5 py-2 text-xs">
+              <i class="fa-solid fa-user-plus"></i> <span class="hidden sm:inline">Daftar Penyewa</span>
+            </button>
+            <button type="button" onclick="loadPublicRooms(true)" title="Muat Semula" class="btn btn-ghost w-9 h-9 rounded-lg">
+              <i class="fa-solid fa-rotate text-xs"></i>
+            </button>
+          </div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="grid-bilik-public"></div>
       </div>
@@ -1109,6 +1111,62 @@
     </div>
   </div>
 
+  <!-- MODAL PENDAFTARAN PENYEWA BAHARU (3B — terbuka) -->
+  <div id="modal-daftar" class="app-modal">
+    <div class="surface max-w-md w-full p-5 sm:p-6 space-y-4 mx-auto my-auto" style="border-radius: 24px;">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900">Pendaftaran Penyewa</h3>
+            <p class="text-[11px] text-slate-400">Isi maklumat untuk didaftarkan ke dalam sistem.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModalDirect('modal-daftar')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition flex-shrink-0">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleDaftarSubmit(event)" class="space-y-3">
+        <div>
+          <label class="field-label">Pilih Bilik <span class="text-rose-500 text-[10px]">*</span></label>
+          <select id="daftar-bilik" required class="field">
+            <option value="">-- Pilih bilik kosong --</option>
+          </select>
+          <p id="daftar-bilik-info" class="text-[10.5px] text-slate-400 mt-1"></p>
+        </div>
+        <div>
+          <label class="field-label">Nama Penuh <span class="text-rose-500 text-[10px]">*</span></label>
+          <input type="text" id="daftar-nama" required class="field" placeholder="Cth: Ahmad bin Ali">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">No. IC <span class="text-rose-500 text-[10px]">*</span></label>
+            <input type="text" id="daftar-ic" required inputmode="numeric" class="field" placeholder="001122110112">
+          </div>
+          <div>
+            <label class="field-label">No. Telefon</label>
+            <input type="text" id="daftar-tel" inputmode="tel" class="field" placeholder="0123456789">
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Tarikh Masuk</label>
+          <input type="date" id="daftar-tarikh" class="field">
+        </div>
+        <p id="daftar-error" class="text-rose-500 text-[11px] font-bold hidden"></p>
+
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModalDirect('modal-daftar')" class="btn btn-ghost w-1/2 py-2.5 text-xs">Batal</button>
+          <button type="submit" id="btn-daftar-submit" class="btn btn-primary w-1/2 py-2.5 text-xs">
+            <i class="fa-solid fa-check"></i> Daftar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL RESIT A4 -->
   <div id="modal-receipt" class="app-modal">
     <div class="bg-white max-w-2xl w-full p-5 sm:p-8 space-y-4 sm:space-y-5 my-auto" id="printable-receipt" style="border-radius: 16px; box-shadow: var(--shadow-lg);">
@@ -1239,7 +1297,6 @@
 
   <script>
     const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbx9_fKb4P-UpuXP0NGq2i6pbhnjRdgGoD9YbKlTIJiPqD699z8VfmcK7Vp6bAdzeGfBlg/exec";
-    const GOOGLE_FORM_URL = "https://forms.gle/2XcGo37g7pqPNkan9";
 
     const SENARAI_BULAN_MELAYU = [
       "Januari", "Februari", "Mac", "April", "Mei", "Jun", 
@@ -1352,12 +1409,106 @@
       if (loader) loader.style.setProperty('display', 'none', 'important');
     }
 
-    function openGoogleFormLink() {
-      window.open(GOOGLE_FORM_URL, "_blank");
+    async function openDaftarModal() {
+      const sel = document.getElementById('daftar-bilik');
+      if (!sel) return;
+
+      // Pastikan senarai bilik tersedia (jika belum dimuat, ambil dari API awam).
+      let rooms = currentRooms || [];
+      if (!rooms || rooms.length === 0) {
+        showLoading("Memuatkan senarai bilik...");
+        try {
+          const res = await apiGet({ action: "getPublicRooms" });
+          hideLoading();
+          if (res && res.success) rooms = res.data || [];
+        } catch (err) {
+          hideLoading();
+          showToast("Gagal memuatkan senarai bilik.", 'error');
+          return;
+        }
+      }
+
+      sel.innerHTML = '<option value="">-- Pilih bilik kosong --</option>';
+
+      // Isi dropdown dengan bilik KOSONG sahaja.
+      const kosong = (rooms || []).filter(r => r.status === 'Kosong');
+      kosong.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.innerText = `${r.nama} (${r.id})`;
+        sel.appendChild(opt);
+      });
+
+      document.getElementById('daftar-nama').value = '';
+      document.getElementById('daftar-ic').value = '';
+      document.getElementById('daftar-tel').value = '';
+      document.getElementById('daftar-tarikh').value = '';
+      document.getElementById('daftar-error').classList.add('hidden');
+
+      const info = document.getElementById('daftar-bilik-info');
+      info.innerText = kosong.length === 0
+        ? 'Tiada bilik kosong buat masa ini.'
+        : `${kosong.length} bilik kosong tersedia.`;
+
+      showModalDirect('modal-daftar');
     }
 
-    function copyGoogleFormLink() {
-      copyToClipboard(GOOGLE_FORM_URL, "Pautan Google Form");
+    function handleDaftarSubmit(e) {
+      e.preventDefault();
+
+      const idBilik = document.getElementById('daftar-bilik').value;
+      const nama = document.getElementById('daftar-nama').value.trim();
+      const ic = document.getElementById('daftar-ic').value.trim();
+      const tel = document.getElementById('daftar-tel').value.trim();
+      const tarikh = document.getElementById('daftar-tarikh').value;
+      const errEl = document.getElementById('daftar-error');
+      const btn = document.getElementById('btn-daftar-submit');
+
+      const fail = (msg) => { errEl.innerText = msg; errEl.classList.remove('hidden'); showToast(msg, 'error'); };
+
+      if (!idBilik) return fail('Sila pilih bilik.');
+      if (!nama) return fail('Sila masukkan nama penuh.');
+      if (!ic) return fail('Sila masukkan No. IC.');
+
+      // Semak bilik masih kosong (elak perlumbaan data).
+      const bilik = (currentRooms || []).find(r => r.id === idBilik);
+      if (bilik && bilik.status !== 'Kosong') {
+        return fail(`Bilik ${idBilik} sudah mempunyai penyewa semasa. Sila pilih bilik lain.`);
+      }
+
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      showLoading("Mendaftarkan penyewa...");
+
+      const payload = {
+        idBilik: idBilik,
+        namaPenyewa: nama,
+        icPenyewa: ic,
+        telPenyewa: tel,
+        tarikhMasuk: tarikh
+      };
+
+      (async () => {
+        try {
+          const res = await apiPost({ action: "daftarPenyewa", payload: payload });
+          hideLoading();
+          btn.disabled = false;
+
+          if (res && res.success) {
+            sessionStorage.removeItem("cached_rooms");
+            closeModalDirect('modal-daftar');
+            showToast(res.message || "Penyewa berjaya didaftarkan!", 'success');
+            if (authenticatedPassword) loadOwnerData();
+            loadPublicRooms(true);
+          } else {
+            fail((res && res.message) || 'Gagal mendaftar penyewa.');
+          }
+        } catch (err) {
+          hideLoading();
+          btn.disabled = false;
+          fail('Ralat sambungan: ' + err.message);
+        }
+      })();
     }
 
     function showModalDirect(id) {
