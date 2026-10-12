@@ -1132,7 +1132,7 @@
       <form onsubmit="handleDaftarSubmit(event)" class="space-y-3">
         <div>
           <label class="field-label">Pilih Bilik <span class="text-rose-500 text-[10px]">*</span></label>
-          <select id="daftar-bilik" required class="field">
+          <select id="daftar-bilik" required class="field" onchange="onDaftarRoomChange()">
             <option value="">-- Pilih bilik kosong --</option>
           </select>
           <p id="daftar-bilik-info" class="text-[10.5px] text-slate-400 mt-1"></p>
@@ -1151,9 +1151,15 @@
             <input type="text" id="daftar-tel" inputmode="tel" class="field" placeholder="0123456789">
           </div>
         </div>
-        <div>
-          <label class="field-label">Tarikh Masuk</label>
-          <input type="date" id="daftar-tarikh" class="field">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label">Tarikh Masuk</label>
+            <input type="date" id="daftar-tarikh" class="field">
+          </div>
+          <div>
+            <label class="field-label">Amaun Sewa / Bulan (RM) <span class="text-rose-500 text-[10px]">*</span></label>
+            <input type="number" id="daftar-amaun" required min="1" step="1" class="field" placeholder="350">
+          </div>
         </div>
         <p id="daftar-error" class="text-rose-500 text-[11px] font-bold hidden"></p>
 
@@ -1439,10 +1445,13 @@
         sel.appendChild(opt);
       });
 
+      window._daftarRooms = kosong;
+
       document.getElementById('daftar-nama').value = '';
       document.getElementById('daftar-ic').value = '';
       document.getElementById('daftar-tel').value = '';
       document.getElementById('daftar-tarikh').value = '';
+      document.getElementById('daftar-amaun').value = '';
       document.getElementById('daftar-error').classList.add('hidden');
 
       const info = document.getElementById('daftar-bilik-info');
@@ -1453,6 +1462,17 @@
       showModalDirect('modal-daftar');
     }
 
+    function onDaftarRoomChange() {
+      const idBilik = document.getElementById('daftar-bilik').value;
+      const amaunEl = document.getElementById('daftar-amaun');
+      const rooms = window._daftarRooms || [];
+      const room = rooms.find(r => r.id === idBilik);
+      // Pra-isi amaun sewa dengan harga bilik (boleh ubah jika amaun dipersetujui lain).
+      if (room && room.harga && (!amaunEl.value || amaunEl.value === '')) {
+        amaunEl.value = room.harga;
+      }
+    }
+
     function handleDaftarSubmit(e) {
       e.preventDefault();
 
@@ -1461,6 +1481,7 @@
       const ic = document.getElementById('daftar-ic').value.trim();
       const tel = document.getElementById('daftar-tel').value.trim();
       const tarikh = document.getElementById('daftar-tarikh').value;
+      const amaun = document.getElementById('daftar-amaun').value;
       const errEl = document.getElementById('daftar-error');
       const btn = document.getElementById('btn-daftar-submit');
 
@@ -1469,6 +1490,7 @@
       if (!idBilik) return fail('Sila pilih bilik.');
       if (!nama) return fail('Sila masukkan nama penuh.');
       if (!ic) return fail('Sila masukkan No. IC.');
+      if (!amaun || Number(amaun) <= 0) return fail('Sila masukkan amaun bayaran sewa bulanan yang dipersetujui.');
 
       // Semak bilik masih kosong (elak perlumbaan data).
       const bilik = (currentRooms || []).find(r => r.id === idBilik);
@@ -1485,7 +1507,8 @@
         namaPenyewa: nama,
         icPenyewa: ic,
         telPenyewa: tel,
-        tarikhMasuk: tarikh
+        tarikhMasuk: tarikh,
+        amaunSewa: Number(amaun)
       };
 
       (async () => {
@@ -1514,6 +1537,16 @@
     function showModalDirect(id) {
       const el = document.getElementById(id);
       if (el) el.style.setProperty('display', 'flex', 'important');
+    }
+
+    // Tukar tarikh paparan (DD-MM-YYYY atau DDMMYYYY) kepada format input <input type="date"> (yyyy-MM-dd).
+    function toDateInputValue(val) {
+      if (!val) return '';
+      const s = val.toString().trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s.substring(6, 10) + '-' + s.substring(3, 5) + '-' + s.substring(0, 2);
+      if (/^\d{8}$/.test(s)) return s.substring(4, 8) + '-' + s.substring(2, 4) + '-' + s.substring(0, 2);
+      return '';
     }
 
     function openMoreMenu() {
@@ -2479,7 +2512,7 @@
         document.getElementById('form-namaPenyewa').value = b.penyewa.nama || '';
         document.getElementById('form-telPenyewa').value = b.penyewa.tel || '';
         document.getElementById('form-icPenyewa').value = b.penyewa.ic || '';
-        document.getElementById('form-tarikhMasuk').value = b.penyewa.tarikh || '';
+        document.getElementById('form-tarikhMasuk').value = toDateInputValue(b.penyewa.tarikh);
 
         quickPay.classList.remove('hidden');
         btnDelete.classList.remove('hidden');
