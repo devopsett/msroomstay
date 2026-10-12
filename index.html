@@ -381,7 +381,12 @@
 
       <!-- Grid Bilik -->
       <div class="surface p-4 sm:p-5">
-        <h2 class="section-title text-sm mb-3">Senarai Bilik</h2>
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <h2 class="section-title text-sm">Senarai Bilik</h2>
+          <button type="button" onclick="confirmSelarasRekodBayaran()" title="Selaraskan rekod bayaran bermula dari bulan mula sewa setiap penyewa" class="btn btn-ghost px-3 py-1.5 text-[11px]">
+            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Selaras Rekod Bayaran
+          </button>
+        </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="grid-bilik-owner"></div>
       </div>
 
@@ -2630,6 +2635,28 @@
       toggleTenantFields();
       renderRoomHistory(b.id);
       showModalDirect('modal-edit');
+    }
+
+    function confirmSelarasRekodBayaran() {
+      if (!authenticatedPassword) return;
+
+      showConfirmModal(
+        'Selaras Rekod Bayaran',
+        'Selaraskan rekod bayaran SEMUA penyewa supaya bermula dari bulan mula sewa masing-masing? Rekod yang sudah "Selesai" atau ada resit TIDAK akan dipadam.',
+        async () => {
+          showLoading("Menyelaraskan rekod bayaran...");
+          try {
+            const res = await apiPost({ action: "kemaskiniRekodBayaranSemuaPenyewa", password: authenticatedPassword });
+            hideLoading();
+            showToast((res && res.message) || 'Rekod bayaran telah diselaraskan.', 'success');
+            loadOwnerData();
+          } catch (err) {
+            hideLoading();
+            showToast("Ralat: " + err.message, 'error');
+          }
+        },
+        false
+      );
     }
 
     function confirmDeleteTenant() {
