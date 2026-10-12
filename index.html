@@ -380,13 +380,15 @@
           </button>
         </div>
 
-        <button type="button" onclick="toggleTheme()" id="btn-theme" aria-label="Tukar tema gelap/cerah" title="Tema" class="btn btn-ghost w-10 h-10 rounded-xl flex-shrink-0">
-          <i class="fa-solid fa-moon" id="icon-theme"></i>
-        </button>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button type="button" onclick="toggleTheme()" id="btn-theme" aria-label="Tukar tema gelap/cerah" title="Tema" class="btn btn-ghost w-10 h-10 rounded-xl flex-shrink-0">
+            <i class="fa-solid fa-moon" id="icon-theme"></i>
+          </button>
 
-        <button type="button" onclick="requestOwnerAccess()" class="sm:hidden btn btn-outline w-10 h-10 rounded-xl" aria-label="Dashboard Pemilik">
-          <i class="fa-solid fa-lock" id="icon-owner-mobile"></i>
-        </button>
+          <button type="button" onclick="requestOwnerAccess()" class="sm:hidden btn btn-outline w-10 h-10 rounded-xl" aria-label="Dashboard Pemilik">
+            <i class="fa-solid fa-lock" id="icon-owner-mobile"></i>
+          </button>
+        </div>
       </div>
     </div>
   </header>
