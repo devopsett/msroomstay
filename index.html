@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MSRoomstay</title>
 
   <!-- PWA & Mobile Meta Tags -->
@@ -21,9 +21,27 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
   <style>
+    :root {
+      --brand: #004ca8;
+      --brand-600: #0057bd;
+      --brand-700: #003f8a;
+      --brand-50: #eef4fc;
+      --brand-100: #d9e7f8;
+      --ink: #0f172a;
+      --ink-soft: #475569;
+      --line: #e2e8f0;
+      --surface: #ffffff;
+      --app-bg: #f1f5f9;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .04);
+      --shadow-md: 0 4px 16px rgba(15, 23, 42, .08);
+      --shadow-lg: 0 18px 48px rgba(15, 23, 42, .16);
+    }
+
     .ms-logo-text {
       color: #ffffff;
-      -webkit-text-stroke: 1.2px #004ca8;
+      -webkit-text-stroke: 1.2px var(--brand);
       paint-order: stroke fill;
     }
     html, body {
@@ -35,19 +53,95 @@
       width: 100%;
       min-height: 100%;
       user-select: none;
-      background-color: #ffffff !important;
+      background-color: var(--app-bg) !important;
     }
     input, select, textarea { font-size: 16px !important; user-select: auto; }
     @media (min-width: 640px) {
       body { font-size: 15px; }
       input, select, textarea { font-size: 14px !important; }
-      .ms-logo-text { -webkit-text-stroke: 1.5px #004ca8; }
+      .ms-logo-text { -webkit-text-stroke: 1.5px var(--brand); }
     }
+
+    /* ---------- Design system helpers ---------- */
+    .app-shell { max-width: 76rem; margin: 0 auto; }
+
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+    /* Ruang bawah untuk bottom app bar pada mobile, hormati safe-area iPhone */
+    @media (max-width: 639.98px) {
+      body { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+    }
+    @media (min-width: 640px) {
+      body { padding-bottom: 3rem; }
+    }
+
+    .surface {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .surface-flat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .9rem; }
+    .section-title { font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+    .section-sub { font-size: 11px; color: #94a3b8; }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .18rem .55rem; border-radius: 999px;
+      font-size: 10px; font-weight: 800; letter-spacing: .02em;
+      border: 1px solid transparent; white-space: nowrap;
+    }
+    .chip-blue { background: var(--brand-50); color: var(--brand-700); border-color: var(--brand-100); }
+    .chip-green { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .chip-amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .chip-rose { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+    .chip-slate { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+    .stat-card { padding: 1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+    .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand); opacity: .85; }
+    .stat-card.is-amber::before { background: #f59e0b; }
+    .stat-card.is-green::before { background: #10b981; }
+    .stat-card.is-rose::before { background: #f43f5e; }
+    .stat-label { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #94a3b8; }
+    .stat-value { font-size: 1.25rem; font-weight: 800; color: var(--ink); margin-top: .2rem; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; font-weight: 700; border-radius: var(--radius-sm); transition: background-color .15s, color .15s, border-color .15s, transform .1s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-600); }
+    .btn-ghost { background: #f1f5f9; color: #475569; }
+    .btn-ghost:hover { background: #e2e8f0; }
+    .btn-success { background: #059669; color: #fff; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: #e11d48; color: #fff; }
+    .btn-danger:hover { background: #be123c; }
+    .btn-outline { background: #fff; color: var(--brand); border: 1px solid var(--brand-100); }
+    .btn-outline:hover { background: var(--brand-50); }
+
+    .field-label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-bottom: .35rem; }
+    .field {
+      width: 100%; padding: .62rem .8rem; border-radius: var(--radius-sm);
+      border: 1px solid #cbd5e1; background: #fff; color: var(--ink); outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0, 76, 168, .12); }
+
+    .pay-card { background: linear-gradient(140deg, #002f68 0%, #004ca8 55%, #0b2a55 100%); color: #fff; border-radius: var(--radius); position: relative; overflow: hidden; }
+    .pay-card::after { content: ""; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(255,255,255,.14), transparent 70%); }
+
+    .row-hover:hover { background: #f8fafc; }
+    .table-wrap { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+    table.data { width: 100%; border-collapse: collapse; }
+    table.data thead th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; font-weight: 800; padding: .6rem .75rem; text-align: left; }
+    table.data tbody td { padding: .7rem .75rem; border-top: 1px solid #f1f5f9; }
 
     .app-modal {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(15, 23, 42, 0.75) !important;
+      background-color: rgba(15, 23, 42, 0.72) !important;
       backdrop-filter: blur(6px) !important;
       -webkit-backdrop-filter: blur(6px) !important;
       z-index: 999999 !important;
@@ -62,7 +156,7 @@
     #global-loader {
       position: fixed !important;
       inset: 0 !important;
-      background-color: rgba(15, 23, 42, 0.55) !important;
+      background-color: rgba(15, 23, 42, 0.5) !important;
       backdrop-filter: blur(8px) !important;
       -webkit-backdrop-filter: blur(8px) !important;
       z-index: 99999999 !important;
@@ -75,7 +169,7 @@
     #pwa-gate-modal {
       position: fixed !important;
       inset: 0 !important;
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+      background: linear-gradient(135deg, #eef4fc 0%, #dbeafe 100%) !important;
       z-index: 999999999 !important;
       display: none;
       align-items: center !important;
@@ -85,8 +179,10 @@
 
     @keyframes slideIn { from { transform: translateY(-16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes slideOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-16px); opacity: 0; } }
+    @keyframes fadeUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .toast-enter { animation: slideIn 0.25s ease-out forwards; }
     .toast-exit { animation: slideOut 0.25s ease-in forwards; }
+    .view-enter { animation: fadeUp .28s ease-out both; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
     @media print {
       @page { size: A4 portrait; margin: 10mm 12mm; }
@@ -99,7 +195,7 @@
     }
   </style>
 </head>
-<body id="app-body" class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-24 sm:pb-12 selection:bg-blue-600 selection:text-white">
+<body id="app-body" class="text-slate-800 antialiased min-h-screen selection:bg-blue-700 selection:text-white">
 
   <!-- BANNER CADANGAN PASANG PWA (boleh ditolak, tidak menyekat akses) -->
   <div id="pwa-gate-modal" class="no-print">
@@ -154,39 +250,52 @@
   <div id="toast-container" class="fixed top-3 left-3 right-3 sm:left-auto sm:right-4 z-[9999999] flex flex-col space-y-2 pointer-events-none max-w-sm ml-auto"></div>
 
   <!-- Top Navigation Header -->
-  <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 no-print shadow-xs">
-    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-14 sm:h-16">
-        <div class="flex items-center space-x-2.5 cursor-pointer py-2" onclick="switchView('tenant')">
-          <img src="LogoMSRoomstay.png" alt="Logo MSRoomstay" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-sm flex-shrink-0 bg-blue-50 p-0.5">
-          <div class="flex items-baseline font-black tracking-tight text-lg sm:text-xl select-none">
-            <span class="ms-logo-text">MS</span><span class="text-[#004ca8]">Roomstay</span>
-          </div>
+  <header class="sticky top-0 z-30 no-print" style="background: rgba(255,255,255,.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);">
+    <div class="app-shell px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <button type="button" onclick="switchView('tenant')" class="flex items-center gap-2.5 py-2 text-left">
+          <img src="LogoMSRoomstay.png" alt="Logo MSRoomstay" class="w-9 h-9 rounded-lg object-contain flex-shrink-0" style="background: var(--brand-50); padding: 2px;">
+          <span class="flex items-baseline font-black tracking-tight text-lg select-none">
+            <span class="ms-logo-text">MS</span><span style="color: var(--brand);">Roomstay</span>
+          </span>
+        </button>
+
+        <nav class="hidden lg:flex items-center gap-0.5 p-1 rounded-xl" style="background: #f1f5f9;">
+          <button type="button" onclick="switchView('tenant')" id="btn-tenant-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 transition">
+            Penyewa
+          </button>
+          <button type="button" onclick="switchView('wifi')" id="btn-wifi-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+            WiFi
+          </button>
+          <button type="button" onclick="switchView('guide')" id="btn-guide-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+            Panduan
+          </button>
+          <button type="button" onclick="switchView('terms')" id="btn-terms-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+            Terma
+          </button>
+          <button type="button" onclick="requestOwnerAccess()" id="btn-owner-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-lock mr-1.5 text-slate-400" id="icon-owner-desktop"></i> Pemilik
+          </button>
+        </nav>
+
+        <div class="hidden sm:flex lg:hidden items-center gap-1.5">
+          <button type="button" onclick="switchView('tenant')" id="btn-tenant-mid" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 transition">
+            Penyewa
+          </button>
+          <button type="button" onclick="openMoreMenu()" class="btn btn-ghost w-9 h-9 rounded-lg" aria-label="Lagi menu">
+            <i class="fa-solid fa-ellipsis"></i>
+          </button>
         </div>
-        
-        <div class="hidden sm:flex items-center space-x-1.5">
-          <button type="button" onclick="switchView('tenant')" id="btn-tenant-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition">
-            <i class="fa-solid fa-user-circle mr-1.5"></i> Portal Penyewa
-          </button>
-          <button type="button" onclick="switchView('wifi')" id="btn-wifi-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-wifi mr-1.5 text-slate-400"></i> WiFi & Safebox
-          </button>
-          <button type="button" onclick="switchView('guide')" id="btn-guide-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-book-open mr-1.5 text-slate-400"></i> Panduan
-          </button>
-          <button type="button" onclick="switchView('terms')" id="btn-terms-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-file-contract mr-1.5 text-slate-400"></i> Terma & Syarat
-          </button>
-          <button type="button" onclick="requestOwnerAccess()" id="btn-owner-desktop" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">
-            <i class="fa-solid fa-lock mr-1.5 text-slate-400" id="icon-owner-desktop"></i> Dashboard Pemilik
-          </button>
-        </div>
+
+        <button type="button" onclick="requestOwnerAccess()" class="sm:hidden btn btn-outline w-10 h-10 rounded-xl" aria-label="Dashboard Pemilik">
+          <i class="fa-solid fa-lock" id="icon-owner-mobile"></i>
+        </button>
       </div>
     </div>
-  </nav>
+  </header>
 
   <!-- Mobile Bottom App Bar -->
-  <div class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 flex justify-around items-center h-16 px-1 no-print shadow-lg">
+  <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 no-print flex justify-around items-center px-2 safe-bottom" style="height: calc(4rem + env(safe-area-inset-bottom, 0px)); background: rgba(255,255,255,.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(15,23,42,.06);">
     <button type="button" onclick="switchView('tenant')" id="bnav-tenant" class="flex flex-col items-center justify-center w-full py-1 text-blue-600 font-bold transition">
       <i class="fa-solid fa-house-chimney text-base"></i>
       <span class="text-[10px] mt-1">Bilik</span>
@@ -210,124 +319,100 @@
   </div>
 
   <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 no-print">
+  <main class="app-shell px-4 sm:px-6 lg:px-8 py-4 sm:py-6 no-print">
     
     <!-- 1. DASHBOARD PEMILIK -->
-    <div id="view-owner" style="display:none;" class="space-y-3.5 sm:space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-        <div class="flex items-center justify-between sm:justify-start">
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span class="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Pemilik Sah</span>
-          </div>
-          <button type="button" onclick="logoutOwner()" class="sm:hidden px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 rounded-lg border border-rose-200 active:bg-rose-100">
-            Kunci
+    <div id="view-owner" style="display:none;" class="space-y-4 sm:space-y-6">
+
+      <!-- Bar alat pemilik -->
+      <div class="flex items-center justify-between gap-3">
+        <h1 class="text-base sm:text-lg font-extrabold text-slate-900">Dashboard Pemilik</h1>
+
+        <div class="flex items-center gap-2">
+          <select id="select-bulan" onchange="loadOwnerData()" class="field !py-2 !px-3 text-xs font-bold w-auto"></select>
+          <button type="button" onclick="loadOwnerData()" title="Muat Semula" class="btn btn-ghost w-9 h-9 rounded-lg flex-shrink-0">
+            <i class="fa-solid fa-rotate text-xs"></i>
           </button>
-        </div>
-        
-        <div class="flex items-center justify-between sm:justify-end space-x-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-          <div class="flex items-center space-x-1.5 w-full sm:w-auto">
-            <label class="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap"><i class="fa-regular fa-calendar mr-1 text-slate-400"></i>Bulan:</label>
-            <select id="select-bulan" onchange="loadOwnerData()" class="flex-1 sm:flex-initial px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"></select>
-            <button type="button" onclick="loadOwnerData()" title="Muat Semula" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition">
-              <i class="fa-solid fa-rotate text-xs"></i>
-            </button>
-          </div>
-          <button type="button" onclick="logoutOwner()" class="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition border border-rose-200">
-            <i class="fa-solid fa-right-from-bracket mr-1"></i> Kunci
+          <button type="button" onclick="logoutOwner()" title="Kunci" class="btn btn-ghost w-9 h-9 rounded-lg flex-shrink-0 text-rose-600">
+            <i class="fa-solid fa-right-from-bracket text-xs"></i>
           </button>
         </div>
       </div>
 
       <!-- INBOX NOTIFIKASI BAYARAN PENYEWA -->
-      <div id="inbox-section" style="display:none;" class="bg-amber-50/90 border border-amber-300 rounded-2xl p-4 shadow-sm space-y-3">
-        <div class="flex items-center justify-between border-b border-amber-200 pb-2">
-          <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs animate-pulse">
-              <i class="fa-solid fa-bell"></i>
-            </div>
-            <div>
-              <h3 class="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
-                Peti Masuk: Resit Menunggu Pengesahan
-                <span id="inbox-count-badge" class="px-2 py-0.2 rounded-full bg-amber-600 text-white text-[10px] font-black">0</span>
-              </h3>
-              <p class="text-[10.5px] text-amber-800">Sahkan atau tolak bukti pemindahan wang yang baru dimuat naik.</p>
-            </div>
+      <div id="inbox-section" style="display:none;" class="rounded-2xl p-4 space-y-3" >
+        <div class="rounded-2xl p-4 space-y-3" style="background: #fffbeb; border: 1px solid #fde68a;">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-bell text-amber-600 text-sm"></i>
+            <h3 class="text-xs sm:text-sm font-extrabold text-amber-950">Menunggu Pengesahan</h3>
+            <span id="inbox-count-badge" class="chip chip-amber">0</span>
           </div>
+          <div id="inbox-items-container" class="space-y-2.5"></div>
         </div>
-        <div id="inbox-items-container" class="space-y-2.5"></div>
       </div>
 
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3.5 sm:p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center space-x-3 text-left w-full sm:w-auto">
-          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white text-lg flex-shrink-0">
-            <i class="fa-solid fa-file-signature"></i>
-          </div>
-          <div>
-            <h4 class="text-xs sm:text-sm font-bold">Google Form Pendaftaran Penyewa</h4>
-            <p class="text-[11px] text-blue-100 mt-0.5">Buka atau salin pautan borang rasmi untuk diberikan kepada bakal penyewa baharu.</p>
+      <!-- Statistik -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="stat-card">
+          <span class="stat-label">Terisi</span>
+          <div class="stat-value"><span id="stat-terisi">-</span><span class="text-slate-300 text-base font-bold"> / <span id="stat-total">11</span></span></div>
+        </div>
+        <div class="stat-card is-amber">
+          <span class="stat-label">Kosong</span>
+          <div class="stat-value" style="color:#d97706;" id="stat-kosong">-</div>
+        </div>
+        <div class="stat-card is-green">
+          <span class="stat-label">Kutipan</span>
+          <div class="stat-value" style="color:#059669;" id="stat-kutipan">RM 0</div>
+        </div>
+        <div class="stat-card is-rose">
+          <span class="stat-label">Tunggakan</span>
+          <div class="stat-value" style="color:#e11d48;" id="stat-tunggakan">RM 0</div>
+        </div>
+      </div>
+
+      <!-- Google Form -->
+      <div class="surface p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-file-signature text-lg flex-shrink-0" style="color: var(--brand);"></i>
+          <div class="min-w-0">
+            <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">Borang Pendaftaran Penyewa</h4>
+            <p class="text-[11px] text-slate-500 hidden sm:block">Pautan borang untuk bakal penyewa baharu.</p>
           </div>
         </div>
-        <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-          <button type="button" onclick="copyGoogleFormLink()" class="px-3.5 py-2 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 active:bg-white/40">
-            <i class="fa-regular fa-copy"></i> Salin Link
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button type="button" onclick="copyGoogleFormLink()" title="Salin pautan" class="btn btn-ghost w-9 h-9 rounded-lg">
+            <i class="fa-regular fa-copy text-xs"></i>
           </button>
-          <button type="button" onclick="openGoogleFormLink()" class="px-4 py-2 bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 active:bg-blue-100">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Form
+          <button type="button" onclick="openGoogleFormLink()" class="btn btn-primary px-3.5 py-2 text-xs">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-slate-400">Bilik Terisi</span>
-          <div class="text-base sm:text-xl font-bold text-slate-900 mt-0.5"><span id="stat-terisi">-</span> / <span id="stat-total">11</span></div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-amber-600">Bilik Kosong</span>
-          <div class="text-base sm:text-xl font-bold text-amber-600 mt-0.5" id="stat-kosong">-</div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-emerald-600">Kutipan Selesai</span>
-          <div class="text-base sm:text-xl font-bold text-emerald-600 mt-0.5" id="stat-kutipan">RM 0</div>
-        </div>
-        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <span class="text-[10px] sm:text-[11px] font-semibold uppercase text-rose-600">Tunggakan</span>
-          <div class="text-base sm:text-xl font-bold text-rose-600 mt-0.5" id="stat-tunggakan">RM 0</div>
-        </div>
-      </div>
-
-      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-        <div class="flex justify-between items-center mb-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-900">Senarai 11 Bilik</h2>
-          <span class="text-[10px] text-slate-400">Tekan kad untuk kemas kini bayaran</span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5" id="grid-bilik-owner"></div>
+      <!-- Grid Bilik -->
+      <div class="surface p-4 sm:p-5">
+        <h2 class="section-title text-sm mb-3">Senarai Bilik</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="grid-bilik-owner"></div>
       </div>
 
       <!-- AUDIT LOG AKSES TERAKHIR -->
-      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-clock-rotate-left text-blue-600 text-xs"></i>
-            <h3 class="text-xs sm:text-sm font-bold text-slate-900">Aktiviti & Akses Terakhir (Audit Log)</h3>
-          </div>
-          <span class="text-[10px] text-slate-400">5 rekod terkini</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-[11px]">
-            <thead class="bg-slate-50 text-slate-500 text-[9.5px] uppercase">
+      <div class="surface p-4 sm:p-5">
+        <h3 class="section-title text-sm mb-3">Aktiviti Terakhir</h3>
+        <div class="table-wrap overflow-x-auto">
+          <table class="data min-w-[560px]">
+            <thead>
               <tr>
-                <th class="py-1.5 px-2">Masa & Tarikh</th>
-                <th class="py-1.5 px-2">Peranan</th>
-                <th class="py-1.5 px-2">Pengguna / Nama</th>
-                <th class="py-1.5 px-2">Bilik</th>
-                <th class="py-1.5 px-2 text-right">Aktiviti</th>
+                <th>Masa & Tarikh</th>
+                <th>Peranan</th>
+                <th>Pengguna / Nama</th>
+                <th>Bilik</th>
+                <th class="text-right">Aktiviti</th>
               </tr>
             </thead>
-            <tbody id="audit-log-tbody" class="divide-y divide-slate-100">
+            <tbody id="audit-log-tbody">
               <tr>
-                <td colspan="5" class="py-3 text-center text-slate-400 text-xs">Memuatkan log aktiviti...</td>
+                <td colspan="5" class="py-4 text-center text-slate-400 text-xs">Memuatkan log aktiviti...</td>
               </tr>
             </tbody>
           </table>
@@ -336,116 +421,112 @@
     </div>
 
     <!-- 2. PORTAL PENYEWA -->
-    <div id="view-tenant" style="display:block;" class="space-y-3.5 sm:space-y-4">
-      <div id="tenant-list-section" class="space-y-3">
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between gap-2">
+    <div id="view-tenant" style="display:block;" class="space-y-4 sm:space-y-5">
+      <div id="tenant-list-section" class="space-y-4">
+        <div class="flex items-center justify-between gap-3">
           <div>
-            <h1 class="text-sm sm:text-base font-bold text-slate-900 flex items-baseline">
-              Senarai Bilik&nbsp;<span class="ms-logo-text">MS</span><span class="text-[#004ca8]">Roomstay</span>
-            </h1>
-            <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih bilik anda untuk semak bayaran & resit.</p>
+            <h1 class="text-base sm:text-lg font-extrabold text-slate-900">Senarai Bilik</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Pilih bilik anda untuk semak bayaran & resit.</p>
           </div>
-          <button type="button" onclick="loadPublicRooms(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex-shrink-0 active:bg-slate-300">
-            <i class="fa-solid fa-rotate mr-1"></i> Refresh
+          <button type="button" onclick="loadPublicRooms(true)" title="Muat Semula" class="btn btn-ghost w-9 h-9 rounded-lg flex-shrink-0">
+            <i class="fa-solid fa-rotate text-xs"></i>
           </button>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5" id="grid-bilik-public"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="grid-bilik-public"></div>
       </div>
 
       <!-- Penyata Penyewa -->
-      <div id="tenant-details" style="display:none;" class="max-w-2xl mx-auto space-y-3 sm:space-y-4">
-        <button type="button" onclick="closeTenantDetails()" class="w-full sm:w-auto px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-sm hover:bg-slate-50 transition flex items-center justify-center active:bg-slate-100">
-          <i class="fa-solid fa-arrow-left mr-1.5"></i> Kembali ke Senarai Bilik
+      <div id="tenant-details" style="display:none;" class="max-w-3xl mx-auto space-y-4 sm:space-y-5 view-enter">
+        <button type="button" onclick="closeTenantDetails()" class="btn btn-ghost w-full sm:w-auto px-4 py-2.5 text-xs">
+          <i class="fa-solid fa-arrow-left"></i> Kembali ke Senarai Bilik
         </button>
 
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-          <div class="flex justify-between items-start border-b border-slate-100 pb-2.5">
-            <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900" id="t-nama">-</h3>
-              <p class="text-[11px] text-slate-400" id="t-id">-</p>
+        <div class="surface p-4 sm:p-6 space-y-4">
+          <div class="flex justify-between items-start gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--brand-50);">
+                <i class="fa-solid fa-user text-base" style="color: var(--brand);"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight" id="t-nama">-</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5" id="t-id">-</p>
+              </div>
             </div>
-            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Penyewa Sah</span>
+            <span class="chip chip-green">Sah</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-1 text-sm">
             <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Unit Bilik</p>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Bilik</p>
               <p class="font-bold text-slate-800 mt-0.5" id="t-bilik">-</p>
             </div>
             <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Kadar Sewa</p>
-              <p class="font-bold text-blue-600 mt-0.5" id="t-harga">-</p>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Sewa</p>
+              <p class="font-extrabold mt-0.5" style="color: var(--brand);" id="t-harga">-</p>
             </div>
             <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">No. IC</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-ic">-</p>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">No. IC</p>
+              <p class="font-semibold text-slate-700 mt-0.5" id="t-ic">-</p>
             </div>
             <div>
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">No. Telefon</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-tel">-</p>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Telefon</p>
+              <p class="font-semibold text-slate-700 mt-0.5" id="t-tel">-</p>
             </div>
             <div class="col-span-2">
-              <p class="text-slate-400 text-[10px] uppercase font-semibold">Tarikh Mula Masuk</p>
-              <p class="font-medium text-slate-700 mt-0.5" id="t-tarikh">-</p>
+              <p class="text-slate-400 text-[10px] uppercase font-bold">Tarikh Masuk</p>
+              <p class="font-semibold text-slate-700 mt-0.5" id="t-tarikh">-</p>
             </div>
           </div>
         </div>
 
         <!-- KAD MAKLUMAT AKAUN BAYARAN RASMI DENGAN DUITNOW QR ASLI -->
-        <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-blue-700/50 space-y-3">
-          <div class="flex items-center justify-between border-b border-blue-700/60 pb-2.5">
-            <div class="flex items-center space-x-2">
-              <div class="w-7 h-7 rounded-lg bg-amber-400 text-slate-900 flex items-center justify-center font-black text-xs shadow">
-                <i class="fa-solid fa-building-columns"></i>
-              </div>
-              <div>
-                <h4 class="text-xs sm:text-sm font-black tracking-wide text-white uppercase">MAKLUMAT PEMBAYARAN RASMI</h4>
-                <p class="text-[10px] text-blue-200">Bank Transfer & DuitNow QR</p>
-              </div>
-            </div>
-            <span class="px-2 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/40 rounded-full text-[9.5px] font-bold">Bank Muamalat</span>
+        <div class="pay-card p-4 sm:p-5 space-y-4">
+          <div class="flex items-center gap-2 relative z-10">
+            <i class="fa-solid fa-building-columns text-amber-300"></i>
+            <h4 class="text-sm font-extrabold text-white">Pembayaran</h4>
+            <span class="text-[10px] text-blue-100/70 ml-auto">Bank Muamalat</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div class="bg-white/10 p-3 rounded-xl border border-white/10 space-y-2 flex flex-col justify-between">
-              <div>
-                <span class="text-[10px] text-blue-200 uppercase font-semibold block">Nama Akaun Penerima:</span>
-                <span class="font-black text-xs sm:text-sm text-amber-300 tracking-wide block mt-0.5">AQIL FROZEN FOOD</span>
-                
-                <span class="text-[10px] text-blue-200 uppercase font-semibold block mt-2">Nombor Akaun Bank:</span>
-                <span class="font-mono font-black text-sm sm:text-base text-white tracking-wider block mt-0.5 select-all">13010007157714</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+            <div class="bg-white/10 p-4 rounded-xl space-y-3 flex flex-col justify-between">
+              <div class="space-y-2.5">
+                <div>
+                  <span class="text-[10px] text-blue-100/70 uppercase font-bold block">Penerima</span>
+                  <span class="font-extrabold text-sm text-amber-300 block mt-0.5">AQIL FROZEN FOOD</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-blue-100/70 uppercase font-bold block">No. Akaun</span>
+                  <span class="font-mono font-extrabold text-base text-white tracking-wider block mt-0.5 select-all">13010007157714</span>
+                </div>
               </div>
-              <button type="button" onclick="copyToClipboard('13010007157714', 'No. Akaun Bank Muamalat')" class="w-full py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                <i class="fa-regular fa-copy"></i> Salin No. Akaun
+              <button type="button" onclick="copyToClipboard('13010007157714', 'No. Akaun Bank Muamalat')" class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-regular fa-copy"></i> Salin
               </button>
             </div>
 
-            <div class="bg-white p-3 rounded-xl border border-white/20 text-slate-900 flex flex-col items-center justify-center text-center space-y-1.5 shadow">
-              <span class="text-[10px] font-black text-[#004ca8] uppercase tracking-wider">Imbas DuitNow QR</span>
+            <div class="bg-white p-4 rounded-xl text-slate-900 flex flex-col items-center justify-center text-center space-y-2">
+              <span class="text-[10px] font-extrabold uppercase" style="color: var(--brand);">DuitNow QR</span>
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020201021126810014A000000615000101065641670214130100071577140317AQIL%20FROZEN%20FOOD%20041001821890025204000053034585802MY5917AQIL%20FROZEN%20FOOD%206002MY621305090079315856304141F" 
                    alt="DuitNow QR Rasmi AQIL FROZEN FOOD" 
-                   class="w-32 h-32 sm:w-36 sm:h-36 border-2 border-slate-200 rounded-lg p-1 bg-white object-contain shadow-xs">
-              <p class="text-[9.5px] text-slate-500 font-semibold">*Sila sertakan resit sebagai bukti bayaran</p>
+                   class="w-32 h-32 sm:w-36 sm:h-36 border border-slate-100 rounded-xl p-1 bg-white object-contain">
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="flex justify-between items-center mb-2.5">
-            <h4 class="text-xs sm:text-sm font-bold text-slate-900">Penyata & Rekod Bayaran</h4>
-            <span class="text-[10px] text-slate-400">Tekan 'Bayar' untuk muat naik resit</span>
-          </div>
-          <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
-            <table class="w-full text-left text-xs min-w-[320px]">
-              <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase">
+        <div class="surface p-4 sm:p-5">
+          <h4 class="section-title text-sm mb-3">Penyata Bayaran</h4>
+          <div class="table-wrap overflow-x-auto">
+            <table class="data min-w-[360px]">
+              <thead>
                 <tr>
-                  <th class="px-2.5 py-2">Bulan</th>
-                  <th class="px-2.5 py-2">Jumlah</th>
-                  <th class="px-2.5 py-2">Status</th>
-                  <th class="px-2.5 py-2 text-right">Tindakan</th>
+
+                  <th>Bulan</th>
+                  <th>Jumlah</th>
+                  <th>Status</th>
+                  <th class="text-right">Tindakan</th>
                 </tr>
               </thead>
-              <tbody id="t-bayaran-table" class="divide-y divide-slate-100"></tbody>
+              <tbody id="t-bayaran-table"></tbody>
             </table>
           </div>
         </div>
@@ -453,69 +534,48 @@
     </div>
 
     <!-- 3. TAB WIFI & SAFEBOX -->
-    <div id="view-wifi" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-key text-blue-600"></i> MAKLUMAT WIFI & SAFEBOX
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Butiran kata laluan internet dan kod akses kunci pintu rumah MSRoomstay.</p>
-        </div>
+    <div id="view-wifi" style="display:none;" class="space-y-4 max-w-4xl mx-auto view-enter">
+      <div class="space-y-4">
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-900">WiFi & Safebox</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-wifi"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">WiFi Rumah</h3>
-                  <p class="text-[11px] text-slate-500">Internet percuma berkelajuan tinggi</p>
-                </div>
-              </div>
+          <div class="surface p-4 sm:p-5 space-y-3">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-wifi" style="color: var(--brand);"></i>
+              <h3 class="font-bold text-sm text-slate-900">WiFi Rumah</h3>
             </div>
-            <div class="space-y-2.5 text-xs">
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
-                <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Nama WiFi (SSID):</span>
-                  <span class="font-mono font-bold text-sm text-slate-900">roomstay123</span>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-3 p-3 rounded-xl" style="background:#f8fafc;">
+                <div class="min-w-0">
+                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Nama (SSID)</span>
+                  <span class="font-mono font-bold text-sm text-slate-900 break-all">roomstay123</span>
                 </div>
-                <button type="button" onclick="copyToClipboard('roomstay123', 'Nama WiFi')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg transition">Salin</button>
+                <button type="button" onclick="copyToClipboard('roomstay123', 'Nama WiFi')" class="btn btn-outline px-3 py-1.5 text-xs flex-shrink-0">Salin</button>
               </div>
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
-                <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kata Laluan (Password):</span>
-                  <span class="font-mono font-bold text-sm text-blue-600">7358@msn</span>
+              <div class="flex items-center justify-between gap-3 p-3 rounded-xl" style="background:#f8fafc;">
+                <div class="min-w-0">
+                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kata Laluan</span>
+                  <span class="font-mono font-bold text-sm break-all" style="color: var(--brand);">7358@msn</span>
                 </div>
-                <button type="button" onclick="copyToClipboard('7358@msn', 'Kata Laluan WiFi')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg transition">Salin</button>
+                <button type="button" onclick="copyToClipboard('7358@msn', 'Kata Laluan WiFi')" class="btn btn-outline px-3 py-1.5 text-xs flex-shrink-0">Salin</button>
               </div>
             </div>
           </div>
 
-          <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
-                  <i class="fa-solid fa-key"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-sm sm:text-base text-slate-900">Peti Kunci Pintu Rumah (Safebox)</h3>
-                  <p class="text-[11px] text-slate-500">Akses kunci pintu masuk utama</p>
-                </div>
-              </div>
+          <div class="surface p-4 sm:p-5 space-y-3">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-key text-amber-500"></i>
+              <h3 class="font-bold text-sm text-slate-900">Safebox</h3>
             </div>
-            <div class="space-y-2.5 text-xs">
-              <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/70">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-3 p-3 rounded-xl" style="background:#fffbeb;">
                 <div>
-                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kod Pin Safebox:</span>
-                  <span class="font-mono font-black text-lg text-slate-900 tracking-wider">2384</span>
+                  <span class="text-[10px] uppercase text-slate-400 font-bold block">Kod Pin</span>
+                  <span class="font-mono font-black text-xl text-slate-900 tracking-[.3em]">2384</span>
                 </div>
-                <button type="button" onclick="copyToClipboard('2384', 'Kod Pin Safebox')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-600 rounded-lg transition">Salin</button>
+                <button type="button" onclick="copyToClipboard('2384', 'Kod Pin Safebox')" class="btn btn-outline px-3 py-1.5 text-xs flex-shrink-0" style="color:#b45309;">Salin</button>
               </div>
-              <div class="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl text-[11px] text-amber-900">
-                <p><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> Sila pastikan peti kunci ditutup rapat dan nombor dipusingkan semula.</p>
-              </div>
+              <p class="text-[11px] text-slate-500"><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> Tutup rapat dan pusing nombor semula selepas guna.</p>
             </div>
           </div>
         </div>
@@ -523,77 +583,63 @@
     </div>
 
     <!-- 4. TAB PANDUAN PENGGUNAAN -->
-    <div id="view-guide" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-book-open text-blue-600"></i> PANDUAN PENGGUNAAN PENYEWA
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Panduan lengkap langkah demi langkah untuk penyewa menyemak status dan membuat bayaran.</p>
-        </div>
+    <div id="view-guide" style="display:none;" class="space-y-4 max-w-4xl mx-auto view-enter">
+      <div class="space-y-4">
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Panduan Penyewa</h2>
 
-        <div class="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">A</span>
-              Menyemak Maklumat Asas (WiFi & Safebox)
-            </h4>
-            <p class="pl-8 text-xs text-slate-600 leading-relaxed">
-              Di menu <strong>WiFi & Safebox</strong>, anda boleh mendapatkan butiran penting rumah dengan pantas:
-            </p>
-            <ul class="pl-12 list-disc space-y-1 text-xs text-slate-600">
-              <li><strong>WiFi Rumah:</strong> Nama rangkaian (SSID) dan kata laluan lengkap dengan butang <em>Salin</em>.</li>
-              <li><strong>Peti Kunci Pintu Rumah (Safebox):</strong> Nombor PIN rasmi untuk mengambil dan memulangkan kunci pintu rumah.</li>
+        <div class="space-y-4 text-slate-700 leading-relaxed">
+          <div class="surface p-4 sm:p-5 space-y-2.5">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-xl text-white text-xs flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">A</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">Menyemak Maklumat Asas (WiFi & Safebox)</h4>
+            </div>
+            <p class="text-xs text-slate-600 pl-10">Di menu <strong>WiFi & Safebox</strong>, anda boleh mendapatkan butiran penting rumah dengan pantas:</p>
+            <ul class="text-xs text-slate-600 space-y-1.5 pl-10">
+              <li class="flex gap-2"><i class="fa-solid fa-wifi text-slate-400 mt-0.5"></i><span><strong>WiFi Rumah:</strong> Nama rangkaian (SSID) dan kata laluan lengkap dengan butang <em>Salin</em>.</span></li>
+              <li class="flex gap-2"><i class="fa-solid fa-key text-slate-400 mt-0.5"></i><span><strong>Peti Kunci Pintu (Safebox):</strong> Nombor PIN rasmi untuk mengambil dan memulangkan kunci pintu rumah.</span></li>
             </ul>
           </div>
 
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">B</span>
-              Cara Semak Penyata & Bayar Sewa Bulanan
-            </h4>
-            <ol class="pl-8 list-decimal space-y-2 text-xs text-slate-600">
-              <li>Pada paparan utama Portal Penyewa, tekan pada <strong>Kad Bilik Anda</strong> (contoh: <em>Bilik 1</em> atau <em>Bilik 3</em> yang berstatus <em>Disewa</em>).</li>
-              <li>Masukkan <strong>No. Kad Pengenalan (No. IC)</strong> anda yang berdaftar untuk tujuan keselamatan dan pengesahan.</li>
-              <li>Setelah berjaya disahkan, anda akan dibawa ke paparan <strong>Penyata & Rekod Bayaran</strong>:
-                <ul class="list-disc pl-5 mt-1 space-y-1">
-                  <li>Lihat senarai bulan sewaan dan status bayaran sama ada <em>Selesai</em> atau <em>Tertunggak</em>.</li>
-                  <li>Bagi bulan yang belum dibayar, tekan butang hijau <strong>"Bayar"</strong>.</li>
+          <div class="surface p-4 sm:p-5 space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-xl text-white text-xs flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">B</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">Cara Semak Penyata & Bayar Sewa Bulanan</h4>
+            </div>
+            <ol class="text-xs text-slate-600 space-y-2.5">
+              <li class="flex gap-3"><span class="w-5 h-5 rounded-lg flex items-center justify-center font-bold flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">1</span><span>Pada paparan utama Portal Penyewa, tekan pada <strong>Kad Bilik Anda</strong> (contoh: <em>Bilik 1</em> atau <em>Bilik 3</em> berstatus <em>Disewa</em>).</span></li>
+              <li class="flex gap-3"><span class="w-5 h-5 rounded-lg flex items-center justify-center font-bold flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">2</span><span>Masukkan <strong>No. Kad Pengenalan (No. IC)</strong> anda yang berdaftar untuk pengesahan keselamatan.</span></li>
+              <li class="flex gap-3"><span class="w-5 h-5 rounded-lg flex items-center justify-center font-bold flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">3</span><span>Setelah disahkan, anda akan dibawa ke paparan <strong>Penyata & Rekod Bayaran</strong>:
+                <ul class="list-disc pl-5 mt-1.5 space-y-1 text-slate-600">
+                  <li>Lihat senarai bulan sewaan dan status bayaran (<em>Selesai</em> / <em>Tertunggak</em>).</li>
+                  <li>Bagi bulan belum dibayar, tekan butang hijau <strong>"Bayar"</strong>.</li>
                   <li>Imbas <strong>DuitNow QR</strong> rasmi atau salin nombor akaun <strong>Bank Muamalat (13010007157714 - AQIL FROZEN FOOD)</strong>.</li>
-                  <li>Muat naik resit / bukti pemindahan wang (format gambar JPG, PNG atau PDF) dan tekan <strong>"Hantar Bayaran"</strong>.</li>
-                  <li>Sistem akan automatik membuka aplikasi <strong>WhatsApp</strong> dengan teks mesej siap sedia untuk memaklumkan kepada pemilik bahawa resit telah dimuat naik.</li>
+                  <li>Muat naik resit (JPG, PNG atau PDF) dan tekan <strong>"Hantar Bayaran"</strong>.</li>
+                  <li>Sistem akan membuka <strong>WhatsApp</strong> dengan mesej siap sedia untuk memaklumkan pemilik.</li>
                 </ul>
-              </li>
+              </span></li>
             </ol>
           </div>
 
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] flex items-center justify-center font-black flex-shrink-0">C</span>
-              Cetak Resit Rasmi
-            </h4>
-            <p class="pl-8 text-xs text-slate-600 leading-relaxed">
-              Bagi bayaran yang telah disahkan <em>Selesai</em> oleh pemilik, anda boleh menekan butang <strong>"Resit"</strong> untuk melihat paparan resit rasmi berformat A4. Anda boleh terus mencetak atau menyimpannya sebagai fail PDF untuk rujukan peribadi anda.
-            </p>
+          <div class="surface p-4 sm:p-5 space-y-2.5">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-xl text-white text-xs flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">C</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">Cetak Resit Rasmi</h4>
+            </div>
+            <p class="text-xs text-slate-600 pl-10">Bagi bayaran yang telah disahkan <em>Selesai</em>, tekan butang <strong>"Resit"</strong> untuk paparan resit rasmi A4. Anda boleh cetak atau simpan sebagai PDF.</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 5. TAB TERMA & SYARAT -->
-    <div id="view-terms" style="display:none;" class="space-y-4 max-w-4xl mx-auto">
-      <div class="bg-white p-4 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div class="border-b border-slate-200 pb-3">
-          <h2 class="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-scale-balanced text-blue-600"></i> TERMA & SYARAT BILIK SEWA
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Sila baca dan fahami garis panduan sewaan bagi menjaga keharmonian bersama.</p>
-        </div>
+    <div id="view-terms" style="display:none;" class="space-y-4 max-w-4xl mx-auto view-enter">
+      <div class="space-y-4">
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-900">Terma & Syarat</h2>
 
-        <div class="space-y-3.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">1</span>
+        <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <div class="surface p-4 space-y-1.5">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">1</span>
               Bayaran Sewa
             </h4>
             <p class="pl-7 text-xs text-slate-600 leading-relaxed">
@@ -601,9 +647,9 @@
             </p>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">2</span>
+          <div class="surface p-4 space-y-1.5">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">2</span>
               Deposit
             </h4>
             <p class="pl-7 text-xs text-slate-600 leading-relaxed">
@@ -611,30 +657,30 @@
             </p>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">3</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">3</span>
               Tempoh Sewaan & Notis
             </h4>
             <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-circle-chevron-right text-blue-500 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Tempoh minimum sewaan adalah <strong>3 bulan</strong>.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-circle-chevron-right text-blue-500 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Penyewa wajib memberikan notis keluar sekurang-kurangnya <strong>30 hari</strong> sebelum tarikh keluar.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-circle-chevron-right text-rose-500 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span class="text-rose-900 font-medium">Kegagalan memberikan notis yang mencukupi boleh menyebabkan deposit tidak dipulangkan.</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">4</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">4</span>
               Bil & Kemudahan Termasuk
             </h4>
             <p class="pl-7 text-xs text-slate-600">Bayaran sewaan bulanan telah merangkumi kemudahan percuma berikut:</p>
@@ -654,69 +700,69 @@
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">5</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">5</span>
               Kebersihan
             </h4>
             <p class="pl-7 text-xs text-slate-600">Penyewa bertanggungjawab menjaga kebersihan bilik dan kawasan bersama pada setiap masa:</p>
             <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-trash-can text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Sampah hendaklah dibuang setiap hari.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-broom text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Bilik dan kawasan bersama hendaklah sentiasa bersih dan kemas.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-circle-exclamation text-amber-500 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Caj pembersihan boleh dikenakan sekiranya bilik atau kawasan yang digunakan didapati terlalu kotor.</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">6</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">6</span>
               Peraturan Rumah
             </h4>
             <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-volume-xmark text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Tidak dibenarkan membuat bising selepas jam <strong>10.00 malam</strong>.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-user-lock text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Tidak dibenarkan membawa masuk orang luar tanpa kebenaran tuan rumah.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-ban text-rose-500 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span class="text-rose-900 font-semibold">Dilarang sama sekali menjalankan sebarang aktiviti yang menyalahi undang-undang.</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">7</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">7</span>
               Larangan & Pengubahsuaian
             </h4>
             <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-paw text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Haiwan peliharaan boleh dipertimbangkan dan tertakluk kepada kebenaran tuan rumah terlebih dahulu.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-screwdriver-wrench text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Sebarang pengubahsuaian atau perubahan pada bilik hendaklah mendapat kebenaran tuan rumah terlebih dahulu.</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">8</span>
+          <div class="surface p-4 space-y-1.5">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">8</span>
               Kerosakan & Kehilangan
             </h4>
             <p class="pl-7 text-xs text-slate-600 leading-relaxed">
@@ -724,31 +770,31 @@
             </p>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">9</span>
+          <div class="surface p-4 space-y-2">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">9</span>
               Keselamatan
             </h4>
             <p class="pl-7 text-xs text-slate-600">Penyewa hendaklah mematuhi langkah keselamatan berikut:</p>
             <div class="pl-7 space-y-1.5 text-xs text-slate-600">
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-lock text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Memastikan pintu sentiasa dikunci apabila keluar atau berada di dalam bilik.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-power-off text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Menutup lampu, kipas dan peralatan elektrik apabila tidak digunakan.</span>
               </div>
-              <div class="flex items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+              <div class="flex items-start gap-2.5 rounded-lg p-2.5" style="background:#f8fafc;">
                 <i class="fa-solid fa-plug-circle-xmark text-slate-400 text-[11px] mt-0.5 flex-shrink-0"></i>
                 <span>Memastikan plug atau soket yang tidak digunakan ditutup bagi mengelakkan sebarang risiko keselamatan.</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
-            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-black flex-shrink-0">10</span>
+          <div class="surface p-4 space-y-1.5">
+            <h4 class="font-extrabold text-slate-900 text-sm flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg text-white text-[11px] flex items-center justify-center font-black flex-shrink-0" style="background: var(--brand);">10</span>
               Penamatan Sewaan
             </h4>
             <p class="pl-7 text-xs text-slate-600 leading-relaxed">
@@ -770,33 +816,38 @@
 
   <!-- MODAL BAYARAN OLEH PENYEWA -->
   <div id="modal-pay-tenant" class="app-modal">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-3.5 border border-slate-100 mx-auto my-auto">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-        <div>
-          <h3 class="text-sm sm:text-base font-bold text-slate-900">Bayaran Sewa Bilik</h3>
-          <p class="text-[11px] text-blue-600 font-semibold" id="pay-modal-month-label">-</p>
+    <div class="surface max-w-md w-full p-5 sm:p-6 space-y-4 mx-auto my-auto" style="border-radius: 24px;">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">
+            <i class="fa-solid fa-credit-card"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900">Bayaran Sewa Bilik</h3>
+            <p class="text-[11px] font-bold" style="color: var(--brand);" id="pay-modal-month-label">-</p>
+          </div>
         </div>
-        <button type="button" onclick="closeModalDirect('modal-pay-tenant')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+        <button type="button" onclick="closeModalDirect('modal-pay-tenant')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition flex-shrink-0">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1 text-center">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Jumlah Perlu Dibayar:</span>
-        <span class="text-xl sm:text-2xl font-black text-slate-900 block" id="pay-modal-amount">RM 0</span>
+      <div class="p-4 rounded-2xl text-center" style="background: #f8fafc; border: 1px solid var(--line);">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Jumlah Perlu Dibayar</span>
+        <span class="text-2xl font-extrabold text-slate-900 block mt-0.5" id="pay-modal-amount">RM 0</span>
       </div>
 
-      <div class="bg-blue-50/70 p-3 rounded-xl border border-blue-200 text-xs space-y-2">
+      <div class="p-3.5 rounded-2xl text-xs space-y-2.5" style="background: var(--brand-50); border: 1px solid var(--brand-100);">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase text-blue-900"><i class="fa-solid fa-building-columns mr-1"></i> Bank Muamalat</span>
-          <span class="text-[10px] font-bold text-blue-700">AQIL FROZEN FOOD</span>
+          <span class="text-[10px] font-extrabold uppercase" style="color: var(--brand-700);"><i class="fa-solid fa-building-columns mr-1"></i> Bank Muamalat</span>
+          <span class="text-[10px] font-bold text-slate-500">AQIL FROZEN FOOD</span>
         </div>
-        <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-blue-100">
+        <div class="flex items-center justify-between bg-white p-2.5 rounded-xl" style="border: 1px solid var(--brand-100);">
           <div>
-            <span class="text-[9px] uppercase text-slate-400 font-bold block">No. Akaun:</span>
-            <span class="font-mono font-bold text-slate-900 text-xs select-all">13010007157714</span>
+            <span class="text-[9px] uppercase text-slate-400 font-bold block">No. Akaun</span>
+            <span class="font-mono font-bold text-slate-900 text-sm select-all">13010007157714</span>
           </div>
-          <button type="button" onclick="copyToClipboard('13010007157714', 'No. Akaun Bank Muamalat')" class="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-md transition shadow-xs">
+          <button type="button" onclick="copyToClipboard('13010007157714', 'No. Akaun Bank Muamalat')" class="btn btn-primary px-2.5 py-1.5 text-[11px]">
             Salin
           </button>
         </div>
@@ -805,17 +856,18 @@
       <form onsubmit="handleTenantPaymentSubmit(event)" class="space-y-3">
         <input type="hidden" id="pay-tenant-month">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">
-            <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Bukti/Resit: <span class="text-rose-500 text-[10px]">*Wajib</span>
+          <label class="field-label">
+            <i class="fa-solid fa-cloud-arrow-up mr-1" style="color: var(--brand);"></i> Muat Naik Bukti/Resit <span class="text-rose-500 text-[10px]">*Wajib</span>
           </label>
-          <input type="file" id="pay-tenant-file" accept="image/*,.pdf" required
-                 class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white focus:outline-none">
-          <p class="text-[9.5px] text-slate-400 mt-1 italic">Format: Gambar (JPG, PNG) atau PDF</p>
+          <input type="file" id="pay-tenant-file" accept="image/*,.pdf" required onchange="previewSelectedFile(this, 'pay-tenant-preview')"
+                 class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl p-1.5 bg-white focus:outline-none">
+          <p class="text-[9.5px] text-slate-400 mt-1.5 italic">Format: Gambar (JPG, PNG) atau PDF</p>
+          <div id="pay-tenant-preview" class="mt-2.5"></div>
         </div>
 
-        <div class="flex space-x-2 pt-1">
-          <button type="button" onclick="closeModalDirect('modal-pay-tenant')" class="w-1/2 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Batal</button>
-          <button type="submit" id="btn-submit-tenant-pay" class="w-1/2 py-2.5 text-xs font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-1">
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModalDirect('modal-pay-tenant')" class="btn btn-ghost w-1/2 py-2.5 text-xs">Batal</button>
+          <button type="submit" id="btn-submit-tenant-pay" class="btn btn-primary w-1/2 py-2.5 text-xs">
             <i class="fa-solid fa-paper-plane text-xs"></i> Hantar Bayaran
           </button>
         </div>
@@ -825,10 +877,11 @@
 
   <!-- MODAL PENGESAHAN NO. IC PENYEWA -->
   <div id="modal-tenant-auth" class="app-modal">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl space-y-3.5 border border-slate-100 mx-auto my-auto">
-      <div class="text-center space-y-1">
-        <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-12 h-12 rounded-2xl mx-auto mb-1.5 shadow-sm object-contain bg-blue-50 p-1">
-        <h3 class="text-sm sm:text-base font-bold text-slate-900" id="auth-modal-room-name">Bilik -</h3>
+    <div class="surface max-w-sm w-full p-5 sm:p-6 space-y-4 mx-auto my-auto" style="border-radius: 24px;">
+      <div class="text-center space-y-1.5">
+        <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-14 h-14 rounded-2xl mx-auto mb-1 object-contain" style="background: var(--brand-50); padding: 4px;">
+        <div class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pengesahan Keselamatan</span></div>
+        <h3 class="text-base font-extrabold text-slate-900" id="auth-modal-room-name">Bilik -</h3>
         <p class="text-xs text-slate-500">Penyewa: <strong id="auth-modal-tenant-name" class="text-slate-800">-</strong></p>
         <p class="text-[11px] text-slate-400">Masukkan No. Kad Pengenalan untuk semak rekod sewa.</p>
       </div>
@@ -837,12 +890,12 @@
         <input type="hidden" id="auth-room-id">
         <div>
           <input type="text" id="tenant-ic-input" placeholder="Cth: 001122110112" inputmode="numeric" required
-                 class="w-full px-3.5 py-3 border border-slate-300 rounded-xl text-center text-xs sm:text-sm font-semibold tracking-wider focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
-          <p id="tenant-auth-error" class="text-rose-500 text-[11px] text-center mt-1 hidden font-semibold"></p>
+                 class="field text-center font-bold tracking-widest" style="background:#f8fafc;">
+          <p id="tenant-auth-error" class="text-rose-500 text-[11px] text-center mt-1.5 hidden font-bold"></p>
         </div>
-        <div class="flex space-x-2 pt-1">
-          <button type="button" onclick="closeModalDirect('modal-tenant-auth')" class="w-1/2 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Batal</button>
-          <button type="submit" id="btn-tenant-auth-submit" class="w-1/2 py-2.5 text-xs font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Sahkan</button>
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModalDirect('modal-tenant-auth')" class="btn btn-ghost w-1/2 py-2.5 text-xs">Batal</button>
+          <button type="submit" id="btn-tenant-auth-submit" class="btn btn-primary w-1/2 py-2.5 text-xs">Sahkan</button>
         </div>
       </form>
     </div>
@@ -850,22 +903,22 @@
 
   <!-- MODAL LOGIN PEMILIK -->
   <div id="modal-password" class="app-modal">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl space-y-3.5 border border-slate-100 mx-auto my-auto">
-      <div class="text-center space-y-1">
-        <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-12 h-12 rounded-2xl mx-auto mb-1.5 shadow-sm object-contain bg-blue-50 p-1">
-        <h3 class="text-sm sm:text-base font-bold text-slate-900">Akses Pemilik</h3>
+    <div class="surface max-w-sm w-full p-5 sm:p-6 space-y-4 mx-auto my-auto" style="border-radius: 24px;">
+      <div class="text-center space-y-1.5">
+        <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-14 h-14 rounded-2xl mx-auto mb-1 object-contain" style="background: var(--brand-50); padding: 4px;">
+        <h3 class="text-base font-extrabold text-slate-900">Akses Pemilik</h3>
         <p class="text-xs text-slate-500">Masukkan kata laluan untuk membuka dashboard.</p>
       </div>
 
       <form onsubmit="handlePasswordSubmit(event)" class="space-y-3">
         <div>
           <input type="password" id="owner-pass-input" placeholder="••••" required
-                 class="w-full px-3.5 py-3 border border-slate-300 rounded-xl text-center text-base font-mono tracking-widest focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white">
-          <p id="pass-error" class="text-rose-500 text-[11px] text-center mt-1 hidden font-semibold">Kata laluan tidak tepat!</p>
+                 class="field text-center text-base font-mono tracking-widest" style="background:#f8fafc;">
+          <p id="pass-error" class="text-rose-500 text-[11px] text-center mt-1.5 hidden font-bold">Kata laluan tidak tepat!</p>
         </div>
-        <div class="flex space-x-2 pt-1">
-          <button type="button" onclick="closeModalDirect('modal-password')" class="w-1/2 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Batal</button>
-          <button type="submit" id="btn-pass-submit" class="w-1/2 py-2.5 text-xs font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Masuk</button>
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" onclick="closeModalDirect('modal-password')" class="btn btn-ghost w-1/2 py-2.5 text-xs">Batal</button>
+          <button type="submit" id="btn-pass-submit" class="btn btn-primary w-1/2 py-2.5 text-xs">Masuk</button>
         </div>
       </form>
     </div>
@@ -873,101 +926,107 @@
 
   <!-- MODAL EDIT BILIK PEMILIK -->
   <div id="modal-edit" class="app-modal no-print">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl space-y-3.5 border border-slate-100 max-h-[90vh] overflow-y-auto my-auto">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-        <div>
-          <h3 class="text-sm sm:text-base font-bold text-slate-900" id="modal-title">Kemas Kini Bilik</h3>
-          <p class="text-[11px] text-slate-400" id="modal-subtitle">ID Unit</p>
+    <div class="surface max-w-lg w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto my-auto" style="border-radius: 24px;">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--brand-50); color: var(--brand);">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900" id="modal-title">Kemas Kini Bilik</h3>
+            <p class="text-[11px] text-slate-400" id="modal-subtitle">ID Unit</p>
+          </div>
         </div>
-        <button type="button" onclick="closeModalDirect('modal-edit')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+        <button type="button" onclick="closeModalDirect('modal-edit')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition flex-shrink-0">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <div id="quick-pay-section" class="p-3 sm:p-3.5 rounded-xl border bg-slate-50 border-slate-200 space-y-2.5 hidden">
+      <div id="quick-pay-section" class="p-4 rounded-2xl space-y-3 hidden" style="background: #f8fafc; border: 1px solid var(--line);">
         <div class="flex justify-between items-center">
           <div>
-            <p class="text-[10px] font-semibold text-slate-500 uppercase">Status Bayaran Bulan Ini</p>
-            <p class="text-xs font-bold text-blue-700" id="modal-active-month">-</p>
+            <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Status Bayaran Bulan Ini</p>
+            <p class="text-xs font-bold mt-0.5" style="color: var(--brand);" id="modal-active-month">-</p>
           </div>
           <span id="modal-pay-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold">-</span>
         </div>
 
-        <div id="upload-receipt-wrapper" class="pt-2 border-t border-slate-200 space-y-1">
-          <label class="block text-xs font-bold text-slate-700 mb-1">
-            <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Resit Pemilik (Pilihan):
+        <div id="upload-receipt-wrapper" class="pt-3 border-t border-slate-200 space-y-1">
+          <label class="field-label">
+            <i class="fa-solid fa-cloud-arrow-up mr-1" style="color: var(--brand);"></i> Muat Naik Resit Pemilik (Pilihan)
           </label>
-          <input type="file" id="owner-receipt-file" accept="image/*,.pdf" 
-                 class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white">
+          <input type="file" id="owner-receipt-file" accept="image/*,.pdf" onchange="previewSelectedFile(this, 'owner-receipt-preview')"
+                 class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl p-1.5 bg-white">
           <p id="receipt-upload-hint" class="text-[10px] text-slate-400 italic mt-1">Boleh terus sahkan tanpa fail jika bayaran diterima tunai/manual.</p>
+          <div id="owner-receipt-preview" class="mt-2.5"></div>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
-          <span class="text-xs sm:text-sm font-bold text-slate-800" id="modal-pay-amount">RM 0</span>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-slate-200">
+          <span class="text-sm font-extrabold text-slate-800" id="modal-pay-amount">RM 0</span>
           
-          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end" id="action-pay-buttons-container">
-            <button type="button" id="btn-reject-pay" onclick="processPaymentAction('Tolak')" class="w-1/2 sm:w-auto px-3 py-2 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition shadow-sm flex items-center justify-center gap-1">
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end" id="action-pay-buttons-container">
+            <button type="button" id="btn-reject-pay" onclick="processPaymentAction('Tolak')" class="btn btn-danger w-1/2 sm:w-auto px-3.5 py-2 text-xs">
               <i class="fa-solid fa-ban"></i> Tolak
             </button>
-            <button type="button" id="btn-toggle-pay" onclick="processPaymentAction('Sahkan')" class="w-1/2 sm:w-auto px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1 shadow-sm">
+            <button type="button" id="btn-toggle-pay" onclick="processPaymentAction('Sahkan')" class="btn btn-success w-1/2 sm:w-auto px-4 py-2 text-xs">
               <i class="fa-solid fa-check"></i> Sahkan
             </button>
           </div>
         </div>
       </div>
 
-      <form id="form-bilik" onsubmit="handleFormSubmit(event)" class="space-y-2.5 sm:space-y-3">
+      <form id="form-bilik" onsubmit="handleFormSubmit(event)" class="space-y-3">
         <input type="hidden" id="form-idBilik">
 
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Jenis Bilik</label>
-            <input type="text" id="form-jenis" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <label class="field-label">Jenis Bilik</label>
+            <input type="text" id="form-jenis" required class="field">
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Harga Sewa (RM)</label>
-            <input type="number" id="form-harga" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <label class="field-label">Harga Sewa (RM)</label>
+            <input type="number" id="form-harga" required class="field">
           </div>
         </div>
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-600 mb-1">Status Penghunian</label>
-          <select id="form-status" onchange="toggleTenantFields()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+          <label class="field-label">Status Penghunian</label>
+          <select id="form-status" onchange="toggleTenantFields()" class="field">
             <option value="Kosong">Kosong</option>
             <option value="Berpenghuni">Berpenghuni</option>
           </select>
         </div>
 
-        <div id="tenant-form-section" class="space-y-2.5 pt-2 border-t border-slate-100 hidden">
-          <h4 class="text-[11px] font-bold uppercase text-blue-600">Maklumat Penyewa</h4>
+        <div id="tenant-form-section" class="space-y-3 pt-3 border-t border-slate-100 hidden">
+          <h4 class="text-[11px] font-extrabold uppercase tracking-wide" style="color: var(--brand);">Maklumat Penyewa</h4>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nama Penuh</label>
-            <input type="text" id="form-namaPenyewa" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <label class="field-label">Nama Penuh</label>
+            <input type="text" id="form-namaPenyewa" class="field">
           </div>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] font-semibold text-slate-600 mb-1">No. IC</label>
-              <input type="text" id="form-icPenyewa" placeholder="001122110112" inputmode="numeric" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <label class="field-label">No. IC</label>
+              <input type="text" id="form-icPenyewa" placeholder="001122110112" inputmode="numeric" class="field">
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-slate-600 mb-1">No. Telefon</label>
-              <input type="text" id="form-telPenyewa" placeholder="0123456789" inputmode="tel" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <label class="field-label">No. Telefon</label>
+              <input type="text" id="form-telPenyewa" placeholder="0123456789" inputmode="tel" class="field">
             </div>
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tarikh Masuk</label>
-            <input type="date" id="form-tarikhMasuk" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <label class="field-label">Tarikh Masuk</label>
+            <input type="date" id="form-tarikhMasuk" class="field">
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-3 border-t border-slate-100">
-          <button type="button" id="btn-delete-tenant" onclick="confirmDeleteTenant()" class="w-full sm:w-auto px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition flex items-center justify-center gap-1.5 border border-rose-200 active:bg-rose-200 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-2.5 pt-3 border-t border-slate-100">
+          <button type="button" id="btn-delete-tenant" onclick="confirmDeleteTenant()" class="btn w-full sm:w-auto px-3.5 py-2.5 text-xs text-rose-600 hidden" style="background:#fff1f2; border:1px solid #fecdd3;">
             <i class="fa-solid fa-user-xmark"></i> Padam Penyewa
           </button>
           
-          <div class="flex space-x-2 w-full sm:w-auto justify-end">
-            <button type="button" onclick="closeModalDirect('modal-edit')" class="w-1/2 sm:w-auto px-4 py-2 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition font-semibold">Tutup</button>
-            <button type="submit" id="btn-save" class="w-1/2 sm:w-auto px-5 py-2 text-xs bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm">
+          <div class="flex gap-2.5 w-full sm:w-auto justify-end">
+            <button type="button" onclick="closeModalDirect('modal-edit')" class="btn btn-ghost w-1/2 sm:w-auto px-4 py-2.5 text-xs">Tutup</button>
+            <button type="submit" id="btn-save" class="btn btn-primary w-1/2 sm:w-auto px-5 py-2.5 text-xs">
               Simpan
             </button>
           </div>
@@ -978,68 +1037,68 @@
 
   <!-- MODAL DIALOG PENGESAHAN MODEN -->
   <div id="modal-confirm" class="app-modal">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-3 border border-slate-100 text-center my-auto">
-      <div id="confirm-icon-wrapper" class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-base">
+    <div class="surface max-w-sm w-full p-6 space-y-4 text-center my-auto" style="border-radius: 24px;">
+      <div id="confirm-icon-wrapper" class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-lg">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <div class="space-y-0.5">
-        <h3 class="text-xs sm:text-sm font-bold text-slate-900" id="confirm-title">Pengesahan Diperlukan</h3>
-        <p class="text-[11px] text-slate-500 leading-relaxed" id="confirm-message">Adakah anda pasti?</p>
+      <div class="space-y-1">
+        <h3 class="text-sm font-extrabold text-slate-900" id="confirm-title">Pengesahan Diperlukan</h3>
+        <p class="text-[11.5px] text-slate-500 leading-relaxed" id="confirm-message">Adakah anda pasti?</p>
       </div>
-      <div class="flex space-x-2 pt-1.5">
-        <button type="button" onclick="closeConfirmModal(false)" class="w-1/2 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Batal</button>
-        <button type="button" onclick="closeConfirmModal(true)" id="btn-confirm-action" class="w-1/2 py-2.5 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition shadow-sm">Ya, Teruskan</button>
+      <div class="flex gap-2.5 pt-1">
+        <button type="button" onclick="closeConfirmModal(false)" class="btn btn-ghost w-1/2 py-2.5 text-xs">Batal</button>
+        <button type="button" onclick="closeConfirmModal(true)" id="btn-confirm-action" class="btn btn-danger w-1/2 py-2.5 text-xs">Ya, Teruskan</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL RESIT A4 -->
   <div id="modal-receipt" class="app-modal">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl space-y-4 sm:space-y-5 my-auto border border-slate-100" id="printable-receipt">
-      <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3">
+    <div class="bg-white max-w-2xl w-full p-5 sm:p-8 space-y-4 sm:space-y-5 my-auto" id="printable-receipt" style="border-radius: 16px; box-shadow: var(--shadow-lg);">
+      <div class="flex justify-between items-start border-b-2 pb-3" style="border-color: var(--brand);">
         <div class="flex items-center space-x-2.5">
-          <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-11 h-11 rounded-xl object-contain shadow-sm bg-blue-50 p-1">
+          <img src="LogoMSRoomstay.png" alt="MSRoomstay" class="w-12 h-12 rounded-xl object-contain" style="background: var(--brand-50); padding: 4px;">
           <div>
             <div class="font-extrabold text-base sm:text-xl tracking-tight leading-tight flex items-baseline">
-              <span class="ms-logo-text" style="-webkit-text-stroke: 1.5px #004ca8 !important; color: #ffffff !important;">MS</span><span class="text-[#004ca8]" style="color: #004ca8 !important;">Roomstay</span>
+              <span class="ms-logo-text" style="-webkit-text-stroke: 1.5px #004ca8 !important; color: #ffffff !important;">MS</span><span style="color: #004ca8 !important;">Roomstay</span>
             </div>
-            <p class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Pengurusan Sewaan Bilik</p>
+            <p class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">Pengurusan Sewaan Bilik</p>
             <p class="text-[9px] sm:text-[10px] text-slate-400">Resit Rasmi Bukti Pembayaran</p>
           </div>
         </div>
         
-        <div class="text-right space-y-0.5">
-          <div class="inline-block bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-            <span class="text-[9px] sm:text-[10px] font-mono font-bold text-slate-700" id="rcpt-no">REC-0000</span>
+        <div class="text-right space-y-1">
+          <div class="inline-block px-2.5 py-1 rounded-lg" style="background: var(--brand-50); border: 1px solid var(--brand-100);">
+            <span class="text-[9px] sm:text-[10px] font-mono font-bold" style="color: var(--brand-700);" id="rcpt-no">REC-0000</span>
           </div>
-          <p class="text-[9px] sm:text-[10px] text-slate-500 font-medium" id="rcpt-date">Tarikh: -</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-500 font-semibold" id="rcpt-date">Tarikh: -</p>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3 py-1 text-xs">
         <div class="space-y-0.5">
-          <span class="text-[9px] font-bold tracking-wider uppercase text-slate-400">Diterima Daripada:</span>
-          <h4 class="font-bold text-slate-900 text-xs sm:text-sm" id="rcpt-tenant-name">-</h4>
+          <span class="text-[9px] font-bold tracking-wider uppercase text-slate-400">Diterima Daripada</span>
+          <h4 class="font-extrabold text-slate-900 text-sm" id="rcpt-tenant-name">-</h4>
           <p class="text-[10px] text-slate-600 flex items-center gap-1"><i class="fa-regular fa-id-card text-slate-400 text-[9px]"></i> No. IC: <span id="rcpt-tenant-ic">-</span></p>
           <p class="text-[10px] text-slate-600 flex items-center gap-1"><i class="fa-solid fa-phone text-slate-400 text-[9px]"></i> Tel: <span id="rcpt-tenant-tel">-</span></p>
           <p class="text-[10px] text-slate-600 flex items-center gap-1"><i class="fa-solid fa-id-badge text-slate-400 text-[9px]"></i> ID: <span id="rcpt-tenant-id">-</span></p>
         </div>
         <div class="space-y-0.5 text-right">
-          <span class="text-[9px] font-bold tracking-wider uppercase text-slate-400">Unit Sewaan:</span>
-          <h4 class="font-bold text-slate-900 text-xs sm:text-sm" id="rcpt-room-name">-</h4>
+          <span class="text-[9px] font-bold tracking-wider uppercase text-slate-400">Unit Sewaan</span>
+          <h4 class="font-extrabold text-slate-900 text-sm" id="rcpt-room-name">-</h4>
           <p class="text-[10px] text-slate-600">Status: <strong class="text-emerald-600">Aktif</strong></p>
           <p class="text-[10px] text-slate-600">Kaedah: Pindahan / Tunai</p>
         </div>
       </div>
 
-      <div class="border border-slate-200 rounded-lg overflow-hidden">
+      <div class="rounded-xl overflow-hidden" style="border: 1px solid var(--line);">
         <table class="w-full text-left text-xs min-w-[320px]">
-          <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200 text-[10px]">
+          <thead class="uppercase font-bold text-[10px]" style="background: var(--brand-50); color: var(--brand-700);">
             <tr>
-              <th class="py-2 px-2.5 w-7 text-center">Bil</th>
-              <th class="py-2 px-2.5">Keterangan</th>
-              <th class="py-2 px-2.5 text-center">Bulan</th>
-              <th class="py-2 px-2.5 text-right">Amaun</th>
+              <th class="py-2.5 px-2.5 w-8 text-center">Bil</th>
+              <th class="py-2.5 px-2.5">Keterangan</th>
+              <th class="py-2.5 px-2.5 text-center">Bulan</th>
+              <th class="py-2.5 px-2.5 text-right">Amaun</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-700 text-[11px]">
@@ -1052,19 +1111,19 @@
               <td class="py-2.5 px-2.5 text-right font-bold text-slate-900 text-xs" id="rcpt-amount">0.00</td>
             </tr>
           </tbody>
-          <tfoot class="bg-slate-50/80 border-t border-slate-200 text-slate-900 font-bold">
+          <tfoot class="border-t font-bold text-slate-900" style="background: #f8fafc; border-color: var(--line);">
             <tr>
-              <td colspan="3" class="py-2 px-2.5 text-right uppercase tracking-wider text-[9px] sm:text-[10px]">Jumlah Bayaran:</td>
-              <td class="py-2 px-2.5 text-right text-blue-700 text-xs sm:text-sm font-black" id="rcpt-total">RM 0.00</td>
+              <td colspan="3" class="py-2.5 px-2.5 text-right uppercase tracking-wider text-[9px] sm:text-[10px]">Jumlah Bayaran</td>
+              <td class="py-2.5 px-2.5 text-right text-xs sm:text-sm font-extrabold" style="color: var(--brand);" id="rcpt-total">RM 0.00</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[10px] text-slate-600 space-y-1.5 leading-relaxed">
+      <div class="p-3.5 rounded-xl text-[10px] text-slate-600 space-y-1.5 leading-relaxed" style="background: #f8fafc; border: 1px solid var(--line);">
         <div class="flex items-center space-x-1.5 font-bold text-slate-800 text-[10.5px]">
-          <i class="fa-solid fa-circle-info text-blue-600 text-xs"></i>
-          <span>TERMA & CATATAN PENTING:</span>
+          <i class="fa-solid fa-circle-info text-xs" style="color: var(--brand);"></i>
+          <span>TERMA & CATATAN PENTING</span>
         </div>
         <ol class="list-decimal list-inside space-y-1 pl-0.5 text-slate-600">
           <li><strong>Tarikh Bayaran:</strong> Bayaran sewa bulanan hendaklah dibuat sebelum atau pada <strong>7 hb</strong> setiap bulan.</li>
@@ -1074,23 +1133,50 @@
         </ol>
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1 border-t border-slate-100/60">
-        <div class="border-2 border-emerald-600 bg-emerald-50 text-emerald-700 font-black text-[10px] px-3 py-1 rounded-lg uppercase tracking-wider inline-flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-circle-check text-xs"></i> PEMBAYARAN SELESAI
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1 border-t border-slate-100">
+        <div class="font-extrabold text-[10px] px-3 py-1.5 rounded-lg uppercase tracking-wider inline-flex items-center gap-1.5" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
+          <i class="fa-solid fa-circle-check text-xs"></i> Pembayaran Selesai
         </div>
         <div class="text-left sm:text-right">
           <p class="text-[9.5px] text-slate-400 italic">* Resit ini dijana secara digital oleh sistem. Tandatangan tidak diperlukan.</p>
         </div>
       </div>
 
-      <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 no-print">
-        <button type="button" onclick="closeModalDirect('modal-receipt')" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100 no-print">
+        <button type="button" onclick="closeModalDirect('modal-receipt')" class="btn btn-ghost px-4 py-2 text-xs">
           Tutup
         </button>
-        <button type="button" onclick="window.print()" class="px-4 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition inline-flex items-center">
+        <button type="button" onclick="window.print()" class="btn btn-primary px-4 py-2 text-xs">
           <i class="fa-solid fa-print mr-1"></i> Cetak / Simpan PDF (A4)
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MENU LAGI (SKRIN SEDERHANA: sm–lg) -->
+  <div id="modal-more" class="app-modal">
+    <div class="surface max-w-xs w-full p-3 space-y-1.5 mx-auto my-auto" style="border-radius: 20px;">
+      <div class="flex items-center justify-between px-1.5 pb-1.5">
+        <h3 class="text-sm font-extrabold text-slate-900">Menu</h3>
+        <button type="button" onclick="closeModalDirect('modal-more')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <button type="button" onclick="closeModalDirect('modal-more'); switchView('tenant')" class="btn btn-ghost w-full justify-start px-3.5 py-3 text-xs">
+        <i class="fa-solid fa-user-circle w-4 text-center"></i> Penyewa
+      </button>
+      <button type="button" onclick="closeModalDirect('modal-more'); switchView('wifi')" class="btn btn-ghost w-full justify-start px-3.5 py-3 text-xs">
+        <i class="fa-solid fa-wifi w-4 text-center"></i> WiFi & Safebox
+      </button>
+      <button type="button" onclick="closeModalDirect('modal-more'); switchView('guide')" class="btn btn-ghost w-full justify-start px-3.5 py-3 text-xs">
+        <i class="fa-solid fa-book-open w-4 text-center"></i> Panduan
+      </button>
+      <button type="button" onclick="closeModalDirect('modal-more'); switchView('terms')" class="btn btn-ghost w-full justify-start px-3.5 py-3 text-xs">
+        <i class="fa-solid fa-file-contract w-4 text-center"></i> Terma
+      </button>
+      <button type="button" onclick="closeModalDirect('modal-more'); requestOwnerAccess()" class="btn btn-primary w-full justify-start px-3.5 py-3 text-xs">
+        <i class="fa-solid fa-lock w-4 text-center"></i> Dashboard Pemilik
+      </button>
     </div>
   </div>
 
@@ -1220,6 +1306,10 @@
       if (el) el.style.setProperty('display', 'flex', 'important');
     }
 
+    function openMoreMenu() {
+      showModalDirect('modal-more');
+    }
+
     function closeModalDirect(id) {
       if (document.activeElement && typeof document.activeElement.blur === 'function') {
         document.activeElement.blur();
@@ -1230,10 +1320,18 @@
 
     function updateSidebarUI() {
       const iconDesktop = document.getElementById('icon-owner-desktop');
+      const iconMobile = document.getElementById('icon-owner-mobile');
+      const bnavOwner = document.getElementById('bnav-owner');
+      const bnavOwnerIcon = bnavOwner ? bnavOwner.querySelector('i') : null;
+
       if (authenticatedPassword) {
         if (iconDesktop) iconDesktop.className = "fa-solid fa-lock-open mr-1.5 text-emerald-600";
+        if (iconMobile) iconMobile.className = "fa-solid fa-lock-open";
+        if (bnavOwnerIcon) bnavOwnerIcon.className = "fa-solid fa-lock-open text-base";
       } else {
         if (iconDesktop) iconDesktop.className = "fa-solid fa-lock mr-1.5 text-slate-400";
+        if (iconMobile) iconMobile.className = "fa-solid fa-lock";
+        if (bnavOwnerIcon) bnavOwnerIcon.className = "fa-solid fa-lock text-base";
       }
     }
 
@@ -1386,11 +1484,13 @@
         const isOccupied = (b.status === 'Berpenghuni' || (b.namaPenyewa && b.namaPenyewa !== ''));
         const card = document.createElement('div');
         
-        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all ${
+        card.className = `p-4 rounded-2xl transition-all cursor-pointer active:scale-[.98] ${
           !isOccupied 
-            ? 'bg-slate-50/70 border-slate-200 cursor-pointer hover:border-slate-400' 
-            : 'bg-white border-slate-200 hover:border-blue-500 hover:shadow-md cursor-pointer active:scale-95'
+            ? 'cursor-pointer' 
+            : 'hover:shadow-md'
         }`;
+        card.style.background = isOccupied ? '#ffffff' : '#f8fafc';
+        card.style.border = `1px solid ${isOccupied ? 'var(--brand-100)' : 'var(--line)'}`;
 
         card.onclick = () => {
           if (!isOccupied) {
@@ -1401,20 +1501,11 @@
         };
 
         card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${b.id}</span>
-              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">${b.nama}</h3>
-            </div>
-            <span class="px-2 py-0.5 rounded text-[9px] font-bold ${
-              !isOccupied ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-            }">${!isOccupied ? 'Kosong' : 'Disewa'}</span>
+          <div class="flex justify-between items-center gap-2">
+            <h3 class="font-extrabold text-slate-900 text-sm truncate">${b.nama}</h3>
+            <span class="text-[10px] font-bold ${!isOccupied ? 'text-amber-600' : 'text-blue-700'} whitespace-nowrap">${!isOccupied ? 'Kosong' : 'Disewa'}</span>
           </div>
-          
-          <div class="mt-2.5 pt-2.5 border-t border-slate-100 text-[11px]">
-            <span class="text-slate-400 block text-[9px]">Penyewa:</span>
-            <span class="font-bold text-slate-800 truncate block mt-0.5">${!isOccupied ? '—' : (b.namaPenyewa || 'Penyewa Berdaftar')}</span>
-          </div>
+          <p class="text-[11px] text-slate-500 truncate mt-1">${!isOccupied ? b.id : (b.namaPenyewa || 'Penyewa Berdaftar')}</p>
         `;
         container.appendChild(card);
       });
@@ -1532,22 +1623,22 @@
         let actionBtn = '';
 
         if (isSelesai) {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>`;
-          actionBtn = `<button type="button" onclick="viewReceipt(${idx})" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition inline-flex items-center gap-1 active:scale-95"><i class="fa-solid fa-file-invoice"></i> Resit</button>`;
+          badgeHtml = `<span class="chip chip-green">Selesai</span>`;
+          actionBtn = `<button type="button" onclick="viewReceipt(${idx})" class="btn px-3 py-1.5 text-xs" style="background: var(--brand-50); color: var(--brand-700);"><i class="fa-solid fa-file-invoice"></i> Resit</button>`;
         } else if (isPending) {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">Menunggu Pengesahan</span>`;
+          badgeHtml = `<span class="chip chip-amber animate-pulse">Menunggu Pengesahan</span>`;
           actionBtn = `<span class="text-slate-400 text-xs italic">Sedang Disemak</span>`;
         } else {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Tertunggak</span>`;
-          actionBtn = `<button type="button" onclick="openPayTenantModal('${p.bulan}', ${p.jumlah || t.kadarSewa || 350})" class="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition inline-flex items-center gap-1 active:scale-95 shadow-sm"><i class="fa-solid fa-credit-card"></i> Bayar</button>`;
+          badgeHtml = `<span class="chip chip-rose">Tertunggak</span>`;
+          actionBtn = `<button type="button" onclick="openPayTenantModal('${p.bulan}', ${p.jumlah || t.kadarSewa || 350})" class="btn btn-success px-3.5 py-1.5 text-xs"><i class="fa-solid fa-credit-card"></i> Bayar</button>`;
         }
 
         tbody.innerHTML += `
-          <tr>
-            <td class="px-3 py-3 font-medium text-slate-800 text-xs">${p.bulan || '-'}</td>
-            <td class="px-3 py-3 text-slate-600 text-xs">RM ${p.jumlah || t.kadarSewa || 350}</td>
-            <td class="px-3 py-3">${badgeHtml}</td>
-            <td class="px-3 py-3 text-right">${actionBtn}</td>
+          <tr class="row-hover">
+            <td class="px-3 font-bold text-slate-800 text-xs">${p.bulan || '-'}</td>
+            <td class="px-3 text-slate-600 text-xs font-semibold">RM ${p.jumlah || t.kadarSewa || 350}</td>
+            <td class="px-3">${badgeHtml}</td>
+            <td class="px-3 text-right">${actionBtn}</td>
           </tr>
         `;
       });
@@ -1566,6 +1657,8 @@
       document.getElementById('pay-modal-amount').innerText = `RM ${jumlah}`;
       document.getElementById('pay-tenant-month').value = bulan;
       document.getElementById('pay-tenant-file').value = '';
+      const preview = document.getElementById('pay-tenant-preview');
+      if (preview) preview.innerHTML = '';
       showModalDirect('modal-pay-tenant');
     }
 
@@ -1607,6 +1700,8 @@
           if (res.success) {
             closeModalDirect('modal-pay-tenant');
             sessionStorage.removeItem("cached_rooms");
+            const preview = document.getElementById('pay-tenant-preview');
+            if (preview) preview.innerHTML = '';
             showToast(res.message || 'Bukti bayaran berjaya dihantar!', 'success');
             
             if (res.whatsappUrl) window.open(res.whatsappUrl, '_blank');
@@ -1712,6 +1807,7 @@
       const btnWifiDesk = document.getElementById('btn-wifi-desktop');
       const btnTermsDesk = document.getElementById('btn-terms-desktop');
       const btnGuideDesk = document.getElementById('btn-guide-desktop');
+      const btnTenantMid = document.getElementById('btn-tenant-mid');
 
       const viewOwner = document.getElementById('view-owner');
       const viewTenant = document.getElementById('view-tenant');
@@ -1740,6 +1836,7 @@
       [btnOwnerDesk, btnTenantDesk, btnWifiDesk, btnTermsDesk, btnGuideDesk].forEach(btn => {
         if (btn) btn.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition";
       });
+      if (btnTenantMid) btnTenantMid.className = "px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition";
 
       if (view === 'owner') {
         if (!authenticatedPassword) {
@@ -1760,6 +1857,7 @@
       } else {
         if (viewTenant) viewTenant.style.display = 'block';
         if (btnTenantDesk) btnTenantDesk.className = "px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
+        if (btnTenantMid) btnTenantMid.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 transition";
         closeTenantDetails();
         loadPublicRooms();
       }
@@ -1808,45 +1906,33 @@
         const isKosong = b.status === 'Kosong';
         const card = document.createElement('div');
         
-        let paymentBadge = '';
-        let cardBgClass = 'bg-white border-slate-200';
+        let statusText = 'Kosong';
+        let statusColor = '#b45309';
+        let borderColor = 'var(--line)';
 
         if (!isKosong && b.penyewa && b.bayaranSemasa) {
           const st = (b.bayaranSemasa.status || '').toString().trim().toLowerCase();
           if (st === 'selesai' || st === 'lunas') {
-            cardBgClass = 'bg-emerald-50/50 border-emerald-300';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">✓ Selesai</span>`;
+            statusText = 'Selesai'; statusColor = '#059669'; borderColor = '#a7f3d0';
           } else if (st === 'menunggu pengesahan') {
-            cardBgClass = 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-400/30';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 animate-pulse">Perlu Sahkan</span>`;
+            statusText = 'Perlu Sahkan'; statusColor = '#b45309'; borderColor = '#fde68a';
           } else {
-            cardBgClass = 'bg-rose-50/50 border-rose-300';
-            paymentBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800">✕ Tertunggak</span>`;
+            statusText = 'Tertunggak'; statusColor = '#e11d48'; borderColor = '#fecdd3';
           }
         }
 
-        card.className = `p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer hover:shadow-md active:scale-95 ${cardBgClass}`;
+        card.className = `p-3.5 rounded-xl transition-all cursor-pointer hover:shadow-md active:scale-[.98]`;
+        card.style.background = '#ffffff';
+        card.style.border = `1px solid ${borderColor}`;
         card.onclick = () => openModal(b.id);
 
         card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${b.id}</span>
-              <h3 class="font-bold text-slate-900 text-xs sm:text-sm">${b.nama}</h3>
-            </div>
-            ${isKosong ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 text-amber-800">Kosong</span>' : paymentBadge}
+          <div class="flex justify-between items-center gap-2">
+            <h3 class="font-extrabold text-slate-900 text-sm truncate">${b.nama}</h3>
+            <span class="text-[10px] font-bold whitespace-nowrap" style="color:${statusColor};">${statusText}</span>
           </div>
-          
-          <div class="mt-2.5 pt-2.5 border-t border-slate-100 text-[10px] sm:text-[11px] space-y-0.5">
-            <div class="flex justify-between text-slate-500">
-              <span>Sewa:</span>
-              <span class="font-bold text-blue-600">RM${b.harga}</span>
-            </div>
-            <div class="flex justify-between text-slate-500">
-              <span>Penyewa:</span>
-              <span class="font-medium text-slate-800 truncate max-w-[75px] sm:max-w-[100px]">${b.penyewa ? b.penyewa.nama : '—'}</span>
-            </div>
-          </div>
+          <p class="text-[11px] text-slate-500 truncate mt-1">${b.penyewa ? b.penyewa.nama : 'Kosong'}</p>
+          <p class="text-[11px] font-bold mt-0.5" style="color: var(--brand);">RM${b.harga}</p>
         `;
         container.appendChild(card);
       });
@@ -1869,26 +1955,27 @@
       inboxCont.innerHTML = '';
       inboxList.forEach(item => {
         const row = document.createElement('div');
-        row.className = "bg-white p-3 rounded-xl border border-amber-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5";
+        row.className = "bg-white p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3";
+        row.style.border = "1px solid var(--line)";
         row.innerHTML = `
-          <div class="space-y-0.5">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-black rounded-md">${item.idBilik}</span>
-              <span class="font-bold text-slate-900 text-xs sm:text-sm">${item.namaPenyewa}</span>
+          <div class="space-y-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="chip chip-blue">${item.idBilik}</span>
+              <span class="font-extrabold text-slate-900 text-xs sm:text-sm truncate">${item.namaPenyewa}</span>
               <span class="text-[10px] text-slate-400 font-medium">(${item.tarikh})</span>
             </div>
-            <p class="text-[11px] text-slate-600">Bulan: <strong>${item.bulan}</strong> • Amaun: <strong class="text-blue-600">RM ${item.jumlah}</strong></p>
+            <p class="text-[11px] text-slate-600">Bulan <strong>${item.bulan}</strong> • Amaun <strong style="color: var(--brand);">RM ${item.jumlah}</strong></p>
           </div>
-          <div class="flex items-center space-x-1.5 w-full sm:w-auto justify-end">
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
             ${item.resitUrl ? `
-              <a href="${item.resitUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1">
+              <a href="${item.resitUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost px-3 py-2 text-xs">
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Resit
               </a>
             ` : ''}
-            <button type="button" onclick="quickActionInbox('${item.idPenyewa}', '${item.bulan}', 'Tolak')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition flex items-center gap-1 active:scale-95">
+            <button type="button" onclick="quickActionInbox('${item.idPenyewa}', '${item.bulan}', 'Tolak')" class="btn w-auto px-3 py-2 text-xs" style="background:#fff1f2; color:#be123c; border:1px solid #fecdd3;">
               <i class="fa-solid fa-xmark"></i> Tolak
             </button>
-            <button type="button" onclick="quickActionInbox('${item.idPenyewa}', '${item.bulan}', 'Sahkan')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-xs active:scale-95">
+            <button type="button" onclick="quickActionInbox('${item.idPenyewa}', '${item.bulan}', 'Sahkan')" class="btn btn-success w-auto px-3.5 py-2 text-xs">
               <i class="fa-solid fa-check"></i> Sahkan
             </button>
           </div>
@@ -1930,12 +2017,12 @@
       logs.forEach(l => {
         const isPemilik = l.peranan.toLowerCase() === 'pemilik';
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-50/50">
-            <td class="py-2 px-2 font-mono text-slate-500">${l.masa}</td>
-            <td class="py-2 px-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isPemilik ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">${l.peranan}</span></td>
-            <td class="py-2 px-2 font-semibold text-slate-800">${l.nama}</td>
-            <td class="py-2 px-2 text-slate-600">${l.idBilik}</td>
-            <td class="py-2 px-2 text-right text-slate-600 font-medium">${l.aktiviti}</td>
+          <tr class="row-hover">
+            <td class="px-3 font-mono text-slate-500 text-[11px] whitespace-nowrap">${l.masa}</td>
+            <td class="px-3"><span class="chip ${isPemilik ? 'chip-green' : 'chip-blue'}">${l.peranan}</span></td>
+            <td class="px-3 font-semibold text-slate-800 text-[11px]">${l.nama}</td>
+            <td class="px-3 text-slate-600 text-[11px]">${l.idBilik}</td>
+            <td class="px-3 text-right text-slate-600 text-[11px] font-medium">${l.aktiviti}</td>
           </tr>
         `;
       });
@@ -1943,13 +2030,58 @@
 
     function defaultReceiptUploadMarkup() {
       return `
-        <label class="block text-xs font-bold text-slate-700 mb-1">
-          <i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Muat Naik Resit Pemilik (Pilihan):
+        <label class="field-label">
+          <i class="fa-solid fa-cloud-arrow-up mr-1" style="color: var(--brand);"></i> Muat Naik Resit Pemilik (Pilihan)
         </label>
-        <input type="file" id="owner-receipt-file" accept="image/*,.pdf" 
-               class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1 bg-white">
+        <input type="file" id="owner-receipt-file" accept="image/*,.pdf" onchange="previewSelectedFile(this, 'owner-receipt-preview')"
+               class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl p-1.5 bg-white">
         <p id="receipt-upload-hint" class="text-[10px] text-slate-400 italic mt-1">Boleh terus sahkan tanpa fail jika bayaran diterima tunai/manual.</p>
+        <div id="owner-receipt-preview" class="mt-2.5"></div>
       `;
+    }
+
+    function previewSelectedFile(input, previewId) {
+      const box = document.getElementById(previewId);
+      if (!box) return;
+      box.innerHTML = '';
+      const file = input && input.files ? input.files[0] : null;
+      if (!file) return;
+
+      const isImage = file.type && file.type.indexOf('image/') === 0;
+      const sizeKb = (file.size / 1024).toFixed(0);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'flex items-center gap-3 p-2.5 rounded-xl';
+      wrap.style.background = '#f8fafc';
+      wrap.style.border = '1px solid var(--line)';
+
+      if (isImage) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = 'Pratonton resit';
+        img.className = 'w-14 h-14 rounded-lg object-cover flex-shrink-0';
+        img.style.border = '1px solid var(--line)';
+        img.onload = () => URL.revokeObjectURL(img.src);
+        wrap.appendChild(img);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 text-lg';
+        icon.style.background = '#fff1f2';
+        icon.style.color = '#e11d48';
+        icon.innerHTML = '<i class="fa-solid fa-file-pdf"></i>';
+        wrap.appendChild(icon);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'min-w-0 flex-1';
+      meta.innerHTML = `
+        <p class="text-[11px] font-bold text-slate-800 truncate">${file.name}</p>
+        <p class="text-[10px] text-slate-400">${sizeKb} KB • ${isImage ? 'Gambar' : 'Dokumen'}</p>
+        <p class="text-[10px] font-semibold mt-0.5" style="color:#059669;"><i class="fa-solid fa-circle-check mr-1"></i>Sedia dihantar</p>
+      `;
+      wrap.appendChild(meta);
+
+      box.appendChild(wrap);
     }
 
     function openModal(bilikId) {
