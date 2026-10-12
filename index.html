@@ -1951,31 +1951,37 @@
       btn.disabled = true;
       showLoading("Sedang memuat naik resit...");
 
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        const base64Data = evt.target.result.split(',')[1];
-        const payload = {
-          idPenyewa: currentTenantProfile.id,
-          ic: currentTenantProfile.ic,
-          bulan: bulan,
-          fileData: {
-            base64: base64Data,
-            mimeType: file.type,
-            filename: file.name
-          }
-        };
-
+      (async () => {
         try {
+          const fileData = await compressImageFile(file);
+          if (!fileData) {
+            hideLoading();
+            btn.disabled = false;
+            showToast('Gagal memproses fail. Sila cuba semula.', 'error');
+            return;
+          }
+
+          const payload = {
+            idPenyewa: currentTenantProfile.id,
+            ic: currentTenantProfile.ic,
+            bulan: bulan,
+            fileData: fileData
+          };
+
           const res = await apiPost({ action: "submitTenantPayment", payload: payload });
           hideLoading();
           btn.disabled = false;
+
           if (res.success) {
             closeModalDirect('modal-pay-tenant');
             sessionStorage.removeItem("cached_rooms");
             const preview = document.getElementById('pay-tenant-preview');
             if (preview) preview.innerHTML = '';
             showToast(res.message || 'Bukti bayaran berjaya dihantar!', 'success');
-            
+            if (res.resitNaik === false) {
+              showToast('Nota: resit gagal dimuat naik ke Drive. Pemilik masih perlu mengesahkan bayaran.', 'warning');
+            }
+
             if (res.whatsappUrl) window.open(res.whatsappUrl, '_blank');
 
             showLoading("Mengemas kini rekod...");
@@ -1990,8 +1996,7 @@
           btn.disabled = false;
           showToast('Ralat API: ' + err.message, 'error');
         }
-      };
-      reader.readAsDataURL(file);
+      })();
     }
 
     function viewReceipt(idx) {
@@ -2467,6 +2472,48 @@
       `;
     }
 
+    // Mampatkan imej (resize + kualiti) supaya muat naik lancar walaupun gambar telefon besar.
+    // Pulangkan objek { base64, mimeType, filename }; fail bukan-imej dipulangkan asal.
+    function compressImageFile(file, maxDim = 1280, quality = 0.7) {
+      return new Promise((resolve) => {
+        const isImage = file.type && file.type.indexOf('image/') === 0;
+        if (!isImage) {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve({ base64: e.target.result.split(',')[1], mimeType: file.type, filename: file.name });
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (Math.max(w, h) > maxDim) {
+              if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const outType = 'image/jpeg';
+            const dataUrl = canvas.toDataURL(outType, quality);
+            resolve({ base64: dataUrl.split(',')[1], mimeType: outType, filename: file.name.replace(/\.[^.]+$/, '') + '.jpg' });
+          };
+          img.onerror = () => {
+            // Fallback: hantar asal jika imej gagal diproses.
+            resolve({ base64: e.target.result.split(',')[1], mimeType: file.type, filename: file.name });
+          };
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
     function previewSelectedFile(input, previewId) {
       const box = document.getElementById(previewId);
       if (!box) return;
@@ -2710,21 +2757,16 @@
       showLoading(`${newStatus === 'Selesai' ? 'Mengesahkan' : 'Mengemas kini'} bayaran...`);
 
       if (newStatus === "Selesai" && file) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          const base64Data = e.target.result.split(',')[1];
-          const payload = {
-            idPenyewa: activeModalTenant.id,
-            bulan: selectedMonth,
-            status: newStatus,
-            fileData: {
-              base64: base64Data,
-              mimeType: file.type,
-              filename: file.name
-            }
-          };
-
+        (async () => {
           try {
+            const fileData = await compressImageFile(file);
+            const payload = {
+              idPenyewa: activeModalTenant.id,
+              bulan: selectedMonth,
+              status: newStatus,
+              fileData: fileData
+            };
+
             await apiPost({ action: "updateStatusBayaranWithReceipt", payload: payload, password: authenticatedPassword });
             hideLoading();
             if (btnToggle) btnToggle.disabled = false;
@@ -2738,8 +2780,7 @@
             if (btnReject) btnReject.disabled = false;
             showToast("Ralat: " + err.message, 'error');
           }
-        };
-        reader.readAsDataURL(file);
+        })();
       } else {
         const payload = {
           idPenyewa: activeModalTenant.id,
